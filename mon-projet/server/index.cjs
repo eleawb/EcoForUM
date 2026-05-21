@@ -738,10 +738,6 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir)
   },
-  filename: function (req, file, cb) {
-   
-    cb(null, file.originalname)
-  },
   //Changement de nom 
   filename: function (req, file, cb) {
     //let utf8Filename = file.originalname
