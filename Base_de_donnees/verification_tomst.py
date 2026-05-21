@@ -37,8 +37,8 @@ with open(arg, encoding="utf-8") as f:
                 colonnes = next(source)
 
                 if ((colonnes[-1]=='') and (struct[3] == len(colonnes)-1)) or (struct[3] == len(colonnes)):
-                    nomFichier = metadonnees["chemin_source"].split("/")
-                    resRegex = re.fullmatch(struct[5], nomFichier[-1])
+                    nomFichier = Path(metadonnees["chemin_source"]).name
+                    resRegex = re.fullmatch(struct[5], nomFichier)
 
                     if resRegex:
                         params = metadonnees["chemin_source"].split("_")
