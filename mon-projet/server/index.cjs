@@ -9,6 +9,7 @@ const { PythonShell } = require('python-shell')
 const fs = require('fs')
 const multer = require('multer')
 const path = require('path')
+const { spawn } = require('child_process')
 const app = express()
 const port = 3000
 
@@ -497,172 +498,76 @@ app.post('/api/recherche', async (req, res) => {
 
        
        const entetesGlobales = Array.from(uniqueColonnes.keys())
+       
 
-       //détecte si l'instrument a plusieurs variables mesurées vu que pour le dendromètre on a 2 variables différentes
-        const estMultiVariables = (instrument) => {
-            //check s'il y a plusieurs descriptions_mesure différentes
-            const descriptions = new Set()
+       // construction des résultats
+       const idsMesureVus = new Set() //Set pr éviter les doublons
+        let tousLesResultats = []
+
+        for (const [id, instrument] of instrumentsMap) {
+            if (instrument.mesures.length === 0) continue
+            
             for (const row of instrument.mesures) {
-                descriptions.add(row.description_mesure)
-            }
-            return descriptions.size > 1
-        }
-       
-
-       //construction des résultats: regroupement par date pr les instruments à plusieurs variables (ex dendrometre : une ligne pr temperature, une ligne pr variation_diametre mais il faut une seule ligne pour tt par date)
-            const idsMesureVus = new Set() //comme ça pas de doublons (valeurs uniques)
-            const mesuresParDate = new Map() //regroupe les mesures "date_heure|instrument"
-            //construire les lignes finales regroupées
-            let tousLesResultats = []
-            
-            for (const [id, instrument] of instrumentsMap) {
-                if (instrument.mesures.length === 0) continue
-
-                //check si c'est un instrument à plusieurs variables (comme dendromètre)
-                const multiVar = estMultiVariables(instrument)
-
-                if (multiVar){ //cas multivariables
-                    //on parcourt ttes les lignes de mesures
-                    for (const row of instrument.mesures) {
-                        //éviter doublons
-                        if (idsMesureVus.has(row.id_mesure)) continue
-                        idsMesureVus.add(row.id_mesure)
-                        
-                        const dateKey = `${row.date_heure}|${row.instrument}` //crée une clé unique date+instrument
-                        
-                        //pour chaque regroupement date|instrument on crée un dico (pr dendrometre : {"TemperatureDendro" : ..., "variation_diametre :"...})
-                        //si 1ère fois qu'on voit cette date pr cet instrument on met dans mesurespardate
-                        if (!mesuresParDate.has(dateKey)) {
-                            mesuresParDate.set(dateKey, {
-                                date_heure: row.date_heure,
-                                instrument: row.instrument,
-                                capteur: row.capteur,
-                                valeurs: {}, //dico avec valeurs par variable
-                                coefficient_applique: row.coefficient_applique,
-                                est_en_maintenance: row.est_en_maintenance
-                            })
-                        }
-                        
-                        const entry = mesuresParDate.get(dateKey) //récupère l'objet corresppondant à la clé date|instru
-
-                        //utiliser description_mesure comme nom de colonne
-                        const colName = row.description_mesure
-                        
-                        //stocker la valeur dans la bonne colonne
+                //ignorer les doublons d'id_mesure
+                if (idsMesureVus.has(row.id_mesure)) continue
+                idsMesureVus.add(row.id_mesure)
+                
+                const nouvelleLigne = {}
+                nouvelleLigne["Instrument"] = row.instrument
+                nouvelleLigne["Capteur"] = row.capteur
+           
+               //remplissage des colonnes avec les vrais noms
+                for (let i = 0; i < instrument.nomsColonnes.length; i++) {
+                    const colName = instrument.nomsColonnes[i]
+                    
+                    //si c'est la colonne de donnée (la seule qui n'est pas Instrument, Capteur, Date)
+                    if (colName !== "Instrument" && colName !== "Capteur" && 
+                        !colName.toLowerCase().includes('date') && !colName.toLowerCase().includes('heure')) {
+                        //valeur mesurée
                         if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
-                            entry.valeurs[colName] = row.valeur_mesure_corrigee
+                            nouvelleLigne[colName] = row.valeur_mesure_corrigee
+                            //ajouter une indication que la valeur est corrigée
+                            nouvelleLigne[`${colName}_corrige`] = true
                         } else if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
-                            entry.valeurs[colName] = row.valeur_mesure
+                            nouvelleLigne[colName] = row.valeur_mesure
                         } else {
-                            entry.valeurs[colName] = '-'
-                        }
-                    }
-
-                //prendre tous les noms de colonnes uniques (vu que Set)
-                const tousNomsColonnes = new Set()
-                for (const [id, instrument] of instrumentsMap) {
-                    for (const colName of instrument.nomsColonnes) {
-                        tousNomsColonnes.add(colName)
-                    }
-                }
-                const nomsColonnesGlobaux = Array.from(tousNomsColonnes)
-
-                for (const [dateKey, entry] of mesuresParDate) {
-                    const nouvelleLigne = {}
-                    //pr récapituler l'insrument choisi
-                    nouvelleLigne["Instrument"] = entry.instrument
-                    nouvelleLigne["Capteur"] = entry.capteur
-                    
-                    //on crée une ligne par groupe fait
-                    //on parcourt ttes les colonnes
-                    for (let i = 0; i < nomsColonnesGlobaux.length; i++) {
-                        const colName = nomsColonnesGlobaux[i]
-                        
-                        //soit colonne de données
-                        if (colName !== "Instrument" && colName !== "Capteur" && 
-                            !colName.toLowerCase().includes('date') && !colName.toLowerCase().includes('heure')) {
-                            //on prend la valeur du dico
-                            nouvelleLigne[colName] = entry.valeurs[colName] || '-'
-                        }
-                        //soit colonne date/heure
-                        else if (colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')) {
-                            nouvelleLigne[colName] = entry.date_heure 
-                                ? new Date(entry.date_heure).toLocaleString('fr-FR')
-                                : '-'
-                        }
-                        //ou autres colonnes
-                        else {
                             nouvelleLigne[colName] = '-'
                         }
                     }
-                    
-                    //colonne coeff correcteur si corrections 
-                    if (afficherColonneCoeff) {
-                        nouvelleLigne["Coefficient correcteur"] = (entry.coefficient_applique !== 0 && entry.coefficient_applique !== undefined) 
-                            ? `${entry.coefficient_applique}` 
-                            : "-"
+                    //si c'est la colonne date/heure
+                    else if (colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')) {
+                        nouvelleLigne[colName] = row.date_heure 
+                            ? new Date(row.date_heure).toLocaleString('fr-FR')
+                            : '-'
                     }
-                    
-                    //colonne si mesure prise sous maintenance
-                    if (afficherColonneMaintenance) {
-                        nouvelleLigne["Mesure prise sous maintenance ?"] = entry.est_en_maintenance ? "Oui" : "Non"
+                    else {
+                        nouvelleLigne[colName] = '-'
                     }
-                    
-                    tousLesResultats.push(nouvelleLigne)
-                }
-            } else { //cas monovariable comme hobo et tms4
-                for (const row of instrument.mesures) {
-                    if (idsMesureVus.has(row.id_mesure)) continue
-                    idsMesureVus.add(row.id_mesure)
-                    
-                    const nouvelleLigne = {}
-                    nouvelleLigne["Instrument"] = row.instrument
-                    nouvelleLigne["Capteur"] = row.capteur
-               
-                    for (let i = 0; i < instrument.nomsColonnes.length; i++) {
-                        const colName = instrument.nomsColonnes[i]
-                        
-                        if (colName !== "Instrument" && colName !== "Capteur" && 
-                            !colName.toLowerCase().includes('date') && !colName.toLowerCase().includes('heure')) {
-                            if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
-                                nouvelleLigne[colName] = row.valeur_mesure_corrigee
-                            } else if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
-                                nouvelleLigne[colName] = row.valeur_mesure
-                            } else {
-                                nouvelleLigne[colName] = '-'
-                            }
-                        }
-                        else if (colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')) {
-                            nouvelleLigne[colName] = row.date_heure 
-                                ? new Date(row.date_heure).toLocaleString('fr-FR')
-                                : '-'
-                        }
-                        else {
-                            nouvelleLigne[colName] = '-'
-                        }
-                    }
-                    
-                    if (afficherColonneCoeff) {
-                        nouvelleLigne["Coefficient correcteur"] = (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) 
-                            ? `${row.coefficient_applique}` 
-                            : "-"
-                    }
-                    
-                    if (afficherColonneMaintenance) {
-                        nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non"
-                    }
-                    
-                    tousLesResultats.push(nouvelleLigne)
-                }
-            }
-        }
 
-            
-       
+                }
+
+                //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
+                if (afficherColonneCoeff) {
+                    if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
+                        nouvelleLigne["Coefficient correcteur"] = `${row.coefficient_applique}`
+                    } else {
+                        nouvelleLigne["Coefficient correcteur"] = "-"
+                    }
+                }
+
+
+                //afficher colonne maintenance 
+                if (afficherColonneMaintenance){
+                    nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
+                }
+                
+               tousLesResultats.push(nouvelleLigne)
+           }
+       }
        
        const previewResultats = tousLesResultats.slice(0, 20)
        
-       //ett envoi des résultats 
+       //envoi des résultats 
        res.json({
            resultats: tousLesResultats,
            previewResultats: previewResultats,
@@ -738,7 +643,6 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir)
   },
-  //Changement de nom 
   filename: function (req, file, cb) {
     //let utf8Filename = file.originalname
     //Verifier si le file nest pas null
@@ -746,7 +650,9 @@ const storage = multer.diskStorage({
       cb(null, `file-${Date.now()}`)
       return
     }
-    // Fix UTF-8 encoding
+
+
+       // Fix UTF-8 encoding
     let utf8Filename = file.originalname
     try {
       const latin1Buffer = Buffer.from(file.originalname, 'latin1')
@@ -755,8 +661,10 @@ const storage = multer.diskStorage({
       utf8Filename = file.originalname
     }
     utf8Filename = utf8Filename.replace(/[/\\:*?"<>|]/g, '_')
+
+
     cb(null,utf8Filename)
-}
+  }
 })
 
 const upload = multer({ storage: storage })
@@ -785,102 +693,69 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 /*
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-Python-Shell VERIFICATION
+VERIFICATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */
-
-// cet middleware permet de parser linformation du FOMR encode dans lURL pour le rendre utilisable
-app.use(express.urlencoded({ extended: true }));
-
-
-//Route Script de validation de HOBO
-app.post('/api/validate-hobo-file', async (req, res) => {
-
-    //Extraction des informations de la requete POST 
-    const { fichier_mesure, nom_outil, num_instrument } = req.body;
+app.post('/api/scriptVerif', async (req, res) => {
+    let { nom_outil, num_instrument, chemin_source } = req.body
     
-    //Verification que tout les champs soit completes
-    if (!fichier_mesure || !nom_outil || !num_instrument) {
-        return res.status(400).json({
-            success: false,
-            error: 'champs non completes: fichier_mesure, nom_outil, num_instrument'
-        });
+    console.log('Received verification request:', { chemin_source, nom_outil, num_instrument })
+    // Build the JSON structure expected by controleur.py
+    const jsonInput = {
+        script: "verification",
+        chemin_source: chemin_source,
+        nom_outil: nom_outil,
+        num_instrument: num_instrument
     }
-    //Creation du file path temporel
-    let tempFilePath = null;
-    //Creation du JSON quon va feed le code de verif
+    
+    // Create temp JSON file
+    const tempJsonPath = path.join(__dirname, 'temp_verif_' + Date.now() + '.json')
+    
     try {
-        const jsonInput = {
-            script: "verification",           // la validation a tourner
-            fichier_mesure: fichier_mesure,   // chemin
-            nom_outil: nom_outil,             // nom de linstrument
-            num_instrument: num_instrument    // numero de linstrument
-        };
-    //ON convertis le JS en un object JSON string
-    const jsonString = JSON.stringify(jsonInput, null, 2);
+        fs.writeFileSync(tempJsonPath, JSON.stringify(jsonInput, null, 2), 'utf-8')
         
-    //Creation d un file path unique utilisant le dossier temporaire du systeme
-    const os = require('os');
-    tempFilePath = path.join(os.tmpdir(), `hobo_validation_${Date.now()}.json`);
-
-    //On ecrit le JSON dans le fichier temporel
-    fs.writeFileSync(tempFilePath, jsonString, 'utf8');
-    //console.log(jsonString);
-    console.log(`Created temporary JSON file: ${tempFilePath}`);//verification
-
-    //Configuration du Python-Shell
-    const scriptPath = path.join(__dirname, 'C:\\Users\\DELL\\Desktop\\CMI\\L3\\yetagain\\projet-l3-ecoforum\\Base_de_donnees', 'verification_hobo.py');//le path doit etre adapte la ou le script de validation seras sur le serveur
-    
-    //Configuration des options pour run le script 
-    const options = {
-        mode: 'text',
-        pythonOptions: ['-u'],//cette option permet de recevoir des resultats en temps reel
-        scriptPath: path.dirname(scriptPath),//Permet de trouver le script python
-        args: ['--json', tempFilePath]}
-
-
-    //Execution du script et recollection le output
-    PythonShell.run(path.basename(scriptPath), options, (err, results) => {
-                if (err) {
-                console.error('PythonShell error:', err);
-                return res.status(500).json({
-                    success: false,
-                    error: 'Failed to execute Python validation script',
-                    details: err.message
-                });
-            }
-            //Recuperation de la derniere valeur qui devrait etre True ou False
-            const lastOutput = results[results.length - 1].trim();
-             
-            const isValid = lastOutput === 'True';
-            console.log(`Validation result for ${fichier_mesure}: ${isValid}`);//Visualisation en console
-            
-            return res.json({
-                success: true,
-                isValid: isValid,       // Boolean: true = si le fichier est valide
-                message: isValid 
-                    ? 'File validation passed' 
-                    : 'File validation failed - check filename, column count, or headers',
-                rawOutput: results 
-            });
-    })
-    
-        }catch (error) {
-        // Catch any unexpected errors (file writing issues, etc.)
-        console.error('Server error:', error);
+        // CALL CONTROLEUR.PY (not the specific script directly)
+        const options = {
+            mode: 'text',
+            pythonPath: 'python',
+            pythonOptions: ['-u'],
+            scriptPath: path.join('../Base_de_donnees'), // Point to mon-projet folder where controleur.py is
+            args: [tempJsonPath]
+        }
         
-        return res.status(500).json({
-            success: false,
-            error: 'Erreur interne de validation',
-            details: error.message
-        });
+        PythonShell.run('controleur.py', options)
+            .then(messages => {
+                fs.unlinkSync(tempJsonPath)
+                const lastMessage = messages[messages.length - 1]
+                try {
+                    const result = JSON.parse(lastMessage)
+                    res.json(result)
+                } catch (parseError) {
+                    res.status(500).json({
+                        reussite: false,
+                        commentaire: `Failed to parse output: ${lastMessage}`
+                    })
+                }
+            })
+            .catch(err => {
+                if (fs.existsSync(tempJsonPath)) fs.unlinkSync(tempJsonPath)
+                console.error('PythonShell error:', err)
+                res.status(500).json({
+                    reussite: false,
+                    commentaire: `Script error: ${err.message}`
+                })
+            })
+    } catch (err) {
+        if (fs.existsSync(tempJsonPath)) fs.unlinkSync(tempJsonPath)
+        res.status(500).json({
+            reussite: false,
+            commentaire: `Server error: ${err.message}`
+        })
     }
-
-});
-    
+})
 /*
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-Python-Shell VERIFICATION
+VERIFICATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */
 
