@@ -5,6 +5,7 @@ import csv
 import sys
 import json
 import re
+from pathlib import Path
 
 load_dotenv()
 
@@ -25,8 +26,9 @@ arg = sys.argv[1]       #r".\Base_de_donnees\metadonnees.json"
 
 with open(arg, encoding="utf-8") as f:
     metadonnees = json.load(f)
+    chemin_fichier = Path(metadonnees["chemin_source"])
 
-    titre, extension = os.path.splitext(metadonnees["chemin_source"])
+    extension = chemin_fichier.suffix
     if (".csv" == extension) or not(extension):
         with open(metadonnees["chemin_source"], newline="", encoding="utf-8") as f2:
             source = csv.reader(f2, delimiter=";")
@@ -37,7 +39,7 @@ with open(arg, encoding="utf-8") as f:
                 colonnes = next(source)
 
                 if ((colonnes[-1]=='') and (struct[3] == len(colonnes)-1)) or (struct[3] == len(colonnes)):
-                    nomFichier = Path(metadonnees["chemin_source"]).name
+                    nomFichier = chemin_fichier.name
                     resRegex = re.fullmatch(struct[5], nomFichier)
 
                     if resRegex:
