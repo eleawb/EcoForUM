@@ -787,7 +787,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Python-Shell VERIFICATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
+*/
 
 // cet middleware permet de parser linformation du FOMR encode dans lURL pour le rendre utilisable
 app.use(express.urlencoded({ extended: true }));
@@ -825,6 +825,7 @@ app.post('/api/validate-hobo-file', async (req, res) => {
 
     //On ecrit le JSON dans le fichier temporel
     fs.writeFileSync(tempFilePath, jsonString, 'utf8');
+    //console.log(jsonString);
     console.log(`Created temporary JSON file: ${tempFilePath}`);//verification
 
     //Configuration du Python-Shell
@@ -835,7 +836,7 @@ app.post('/api/validate-hobo-file', async (req, res) => {
         mode: 'text',
         pythonOptions: ['-u'],//cette option permet de recevoir des resultats en temps reel
         scriptPath: path.dirname(scriptPath),//Permet de trouver le script python
-        args: ['--json', tempFilePath]
+        args: ['--json', tempFilePath]}
 
 
     //Execution du script et recollection le output
@@ -862,7 +863,7 @@ app.post('/api/validate-hobo-file', async (req, res) => {
                     : 'File validation failed - check filename, column count, or headers',
                 rawOutput: results 
             });
-    });
+    })
     
         }catch (error) {
         // Catch any unexpected errors (file writing issues, etc.)
@@ -873,11 +874,11 @@ app.post('/api/validate-hobo-file', async (req, res) => {
             error: 'Erreur interne de validation',
             details: error.message
         });
-
+    }
 
 });
     
-
+/*
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Python-Shell VERIFICATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
