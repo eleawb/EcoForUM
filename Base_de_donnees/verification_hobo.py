@@ -107,7 +107,7 @@ def verification_hobo(metajson):
         data = json.load(f)
 
         #normalisation du chemin
-        data["chemin_source"] = normaliser_chemin(data["chemin_source"])
+        #data["chemin_source"] = normaliser_chemin(data["chemin_source"])
 
     dico = {
         "numero_serie" : "",
@@ -122,6 +122,7 @@ def verification_hobo(metajson):
     #pour obtenir le nom du fichier avec son extension sans avoir le chemin avant
     nomFic = Path(data["chemin_source"]).name
     #print(nomFic)
+    ext = Path(data["chemin_source"]).suffix
     num_instru = data["num_instrument"]
     #print(num_instru)
     nom_instru = data["nom_outil"]
@@ -130,89 +131,100 @@ def verification_hobo(metajson):
     #json.dump(dico, f, indent=4, ensure_ascii=False)
 
     cur.execute("SELECT * FROM structure_fichier sf JOIN instrument_mesure im ON lower(im.nom_outil) = lower(sf.nom_instrument) WHERE lower(im.num_instrument) = lower(%s);", (num_instru,))
-    rows = cur.fetchall()
+    row = cur.fetchone()
     #print(rows)
-    for row in rows :
-        if re.search(row[5], nomFic):
-            #print("bon nom de fichier")
-            #colonnes = pd.read_excel(data["fichier_mesure"], nrows=0).columns #avec pandas, mais charge tout le fichier, ce qui n'est pas utile et pas otpimal
-            wb = load_workbook(data["chemin_source"], read_only=True)
-            ws = wb[wb.sheetnames[0]] #accès au premier onglet du fichier
-            colonnes = ws.max_column
-            if row[3] == colonnes:
-                #print("bon nombre de colonnes")
-                entetes = next(ws.iter_rows(max_row=1, values_only=True))#lis la ligne des en-têtes (donne un tuple)
-                entetes = list(entetes)#on transforme le tuple en liste ?
+    #for row in rows :
+    #print("bon nom de fichier")
+    #colonnes = pd.read_excel(data["fichier_mesure"], nrows=0).columns #avec pandas, mais charge tout le fichier, ce qui n'est pas utile et pas otpimal
+    if ext != "." + row[1] and ext != '':
+        dico["commentaire"] = "mauvaise extension"
+        print(json.dumps(dico))
+        return False
+    wb = load_workbook(data["chemin_source"], read_only=True)
+    ws = wb[wb.sheetnames[0]] #accès au premier onglet du fichier
+    colonnes = ws.max_column
+    if row[3] == colonnes:
+        #print("bon nombre de colonnes")
+        entetes = next(ws.iter_rows(max_row=1, values_only=True))#lis la ligne des en-têtes (donne un tuple)
+        entetes = list(entetes)#on transforme le tuple en liste ?
 
-                cols = row[2].split("; ")
-                lcols = []
-                for c in cols:
-                    lcols.append(expand_item(c))
-                #print(lcols)
-                
-                for i in range(colonnes):
-                    if isinstance(lcols[i], str):
-                        if lcols[i].lower().strip() != entetes[i].lower().strip():
-                            #print("nom de colonne différent str")
-                            dico["commentaire"] = "nom de la colonne n°" + i + "différent, nom attendu : " + lcols[i]
-                            #return dico
-                            #with open("retour.json", "w", encoding="utf-8") as f:
-                                #json.dump(dico, f, indent=4, ensure_ascii=False)
-                            #print(os.path.join(os.getcwd(), "retour.json"))
-                            print(json.dumps(dico))
+        cols = row[2].split("; ")
+        lcols = []
+        for c in cols:
+            lcols.append(expand_item(c))
+        #print(lcols)
+            
+        for i in range(colonnes):
+            if isinstance(lcols[i], str):
+                if lcols[i].lower().strip() != entetes[i].lower().strip():
+                    #print("nom de colonne différent str")
+                    dico["commentaire"] = "nom de la colonne n°" + i + "différent, nom attendu : " + lcols[i]
+                    #return dico
+                    #with open("retour.json", "w", encoding="utf-8") as f:
+                        #json.dump(dico, f, indent=4, ensure_ascii=False)
+                    #print(os.path.join(os.getcwd(), "retour.json"))
+                    print(json.dumps(dico))
+                    return False
 
-                        #else:
-                            #print("bon nom de colonne str")
-                    elif isinstance(lcols[i], list):
-                        memecol = False
-                        for j in range(len(lcols[i])):
-                            #print(lcols[i][j].lower().strip())
-                            #print(entetes[i].lower().strip())
-                            if lcols[i][j].lower().strip() == entetes[i].lower().strip():
-                                memecol = True
-                                #print("bon nom de colonne list")
-                        if memecol == False:
-                            #print("nom de colonne différent list")
-                            dico["commentaire"] = "nom de la colonne n°" + i + "différent, noms attendus : " + lcols[i]
-                            #with open("retour.json", "w", encoding="utf-8") as f:
-                            #    json.dump(dico, f, indent=4, ensure_ascii=False)
-                            #print(os.path.join(os.getcwd(), "retour.json"))
-                            print(json.dumps(dico))
-            else :
-                dico["commentaire"] = "le fichier ne contient pas le bon nombre de colonnes, nombre attendu : " + row[3]
-                #with open("retour.json", "w", encoding="utf-8") as f:
-                #    json.dump(dico, f, indent=4, ensure_ascii=False)
-                #print(os.path.join(os.getcwd(), "retour.json"))
-                print(json.dumps(dico))
-        else:
-            dico["commentaire"] = "Le nom du fichier n'a pas le bon format, format attendu : " + row[5]
-            #with open("retour.json", "w", encoding="utf-8") as f:
-            #    json.dump(dico, f, indent=4, ensure_ascii=False)
-            #print(os.path.join(os.getcwd(), "retour.json"))
-            print(json.dumps(dico))
+                #else:
+                    #print("bon nom de colonne str")
+            elif isinstance(lcols[i], list):
+                memecol = False
+                for j in range(len(lcols[i])):
+                    #print(lcols[i][j].lower().strip())
+                    #print(entetes[i].lower().strip())
+                    if lcols[i][j].lower().strip() == entetes[i].lower().strip():
+                        memecol = True
+                        #print("bon nom de colonne list")
+                if memecol == False:
+                    #print("nom de colonne différent list")
+                    dico["commentaire"] = "nom de la colonne n°" + i + "différent, noms attendus : " + lcols[i]
+                    #with open("retour.json", "w", encoding="utf-8") as f:
+                    #    json.dump(dico, f, indent=4, ensure_ascii=False)
+                    #print(os.path.join(os.getcwd(), "retour.json"))
+                    print(json.dumps(dico))
+                    return False
+    else :
+        dico["commentaire"] = "le fichier ne contient pas le bon nombre de colonnes, nombre attendu : " + row[3]
+        #with open("retour.json", "w", encoding="utf-8") as f:
+        #    json.dump(dico, f, indent=4, ensure_ascii=False)
+        #print(os.path.join(os.getcwd(), "retour.json"))
+        print(json.dumps(dico))
+        return False
+    """
+    else:
+        dico["commentaire"] = "Le nom du fichier n'a pas le bon format, format attendu : " + row[5]
+        #with open("retour.json", "w", encoding="utf-8") as f:
+        #    json.dump(dico, f, indent=4, ensure_ascii=False)
+        #print(os.path.join(os.getcwd(), "retour.json"))
+        sys.exit(json.dumps(dico))"""
 
     dico["reussite"] = True
     dico["commentaire"] = ""
-    dico["extension"] = rows[0][1]
-    dico["numero_serie"] = rows[0][11]
-    #dico["date_import"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    pattern = r"([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}_[0-9]{2}_[0-9]{2}) (?=CET\.xlsx)"
+    dico["extension"] = row[1]
+    dico["numero_serie"] = row[11]
 
-    match = re.search(pattern, data["chemin_source"])
+    if re.search(row[5], nomFic):
+        #dico["date_import"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        pattern = r"([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}_[0-9]{2}_[0-9]{2}) (?=CET\.xlsx)"
 
-    if match:
-        raw_dt = match.group(1)
-    #print("Brut :", raw_dt)
+        match = re.search(pattern, data["chemin_source"])
 
-    # Conversion des underscores en deux-points
-    clean_dt = raw_dt.replace("_", ":")
-    #print("Format standard :", clean_dt)
-    dico["date_recueil"] = clean_dt
+        if match:
+            raw_dt = match.group(1)
+            #print("Brut :", raw_dt)
+
+            # Conversion des underscores en deux-points
+            clean_dt = raw_dt.replace("_", ":")
+            #print("Format standard :", clean_dt)
+            dico["date_recueil"] = clean_dt
+
     dico["type_source"] = "fichier_mesure"
     #with open("retour.json", "w", encoding="utf-8") as f:
     #    json.dump(dico, f, indent=4, ensure_ascii=False)
     #print(os.path.join(os.getcwd(), "retour.json"))
     print(json.dumps(dico))
+    return True
 
 
 if __name__ == "__main__":
