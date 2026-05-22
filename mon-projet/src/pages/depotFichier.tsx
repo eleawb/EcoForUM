@@ -132,6 +132,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
             setShowAdditionalInputs(true);
             console.log('Verification passed:', verificationResult.commentaire);
 
+          //Appel a la fonction d'autocompletion
+          autocompletion(verificationResult);
 
       }else {
             //on ne montres pas le reste des inputs
@@ -257,7 +259,84 @@ const handleCreateResponsable = async () => {
       return null;
     }
   };
+
+  //autocompletion des champs du form when verification ok
+  const autocompletion = (verificationData: any) => {
+  if (verificationData && verificationData.reussite === true) {
+    // completion du Numéro de série
+    if (verificationData.numero_serie) {
+      setNumSerie(verificationData.numero_serie);
+    }
+    // completion de Date de cueilli 
+    if (verificationData.date_recueil) {
+      //formattage de la date problemes avec le format du HOBO
+      const dateStr = verificationData.date_recueil;
+      if (dateStr.length === 8) {
+        const formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        setDateCueilli(formattedDate);
+      } else {
+        setDateCueilli(dateStr);
+      }
+    }
+    // completion Extension
+    if (verificationData.extension) {
+      setExtension(verificationData.extension);
+    }
+    // completion Type source
+    if (verificationData.type_source) {
+      setTypeSource(verificationData.type_source);
+    }
+    
+    console.log('Form autocompleté avec le JSON de verification SUCCESS');
+  }
+};
 //////////////////////////////////Script de verification//////////////////////////////////////////////////
+
+//////////////////////////////////Script d'integration//////////////////////////////////////////////////
+const sendFormInfo = async (nom_outil: string, type_source: string, num_instrument: string, filePath: string,
+   num_serie: string, extension :string, date_recueil: Date, date_import:Date) => {
+
+
+      const select = document.getElementById("responsableID");
+      const numero = select.selectedIndex;
+
+    
+    try {
+      
+      const response = await fetch('http://localhost:3000/api/scriptInte', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chemin_source: filePath,
+          type_source: type_source,
+          nom_outil: nom_outil,
+          num_instrument: num_instrument,
+          num_serie : num_serie,
+          extension : extension,
+          date_recueil : date_recueil,
+          date_import: date_import,
+          mail_responsable : responsables[numero].adresse_mail,
+
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Script integration result:', data);
+        return data;
+      } else {
+        console.error('Failed to run integration script'); 
+        return null;
+      }
+    } catch (error) {
+      console.error('Error running integration:', error);
+      return null;
+    }
+  };
+//////////////////////////////////Script d'integration//////////////////////////////////////////////////
+
+
 /*
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 REACT
@@ -346,7 +425,8 @@ return(
                     <FormControl fullWidth required>
                         <InputLabel>Sélectionnez le Responsable_fichier</InputLabel>
                         <Select
-                            value={selectedResponsable} 
+                            value={selectedResponsable}
+                            id="responsableID" 
                             onChange={ResponsableChange}
                             label="Sélectionnez le Responsable_fichier"
                         >
