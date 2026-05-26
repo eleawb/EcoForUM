@@ -347,7 +347,7 @@ return(
         <AppBar position="static" sx={{ bgcolor: "#EC9706" }}>
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>DEPOT DE FICHIER</Typography>
-            <Button color="inherit" onClick={() => navigate('/ajout')}>Retour</Button>
+            <Button color="inherit" onClick={() => navigate('/')}>Menu</Button>
           </Toolbar>
         </AppBar>
         
