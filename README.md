@@ -15,26 +15,8 @@
 - Marine Zwicke
 - Annie Chateau
 
-Dans # package.json, explications des dépendences
 
-voir s'il suffit de taper "npm run dependencies" et "devDependencies" pour installer les dépendences
-
-
-TEST POUR SE CONNECTER A LA BDD ECOFORUMV7 (avec intégration données hobo_n°02, hobo_n°36, tms4, dendromètre (puis plus tard intégration par ajout de fichier du reste))
-
-avant tout, créez vous un fichier .env dans /Base_de_donnees et ajoutez : 
-```
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=EcoForumV7
-DB_USER=postgres
-DB_PASSWORD=mdp
-```
-
-et modifiez postgres avec votre nom d'utilisateur sur pgAdmin, et mdp votre mdp pgAdmin
-normalement .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le gitlab (sécurité)
-
-ENSUITE :
+<!--ENSUITE :
 
 - soit sur pgAdmin : créer une bdd vide EcoForumV7, clic droit sur la base, "Query Tool", Menu File, Open, choisir EcoForumV7.sql, Execute / Play
 - soit ligne de cmd : psql -U postgres -d EcoForumV7 -f EcoForumV7.sql
@@ -42,13 +24,59 @@ ENSUITE :
 se mettre dans dossier racine : npm install (installe tous les imports et dépendances)
 se mettre dans /mon-projet
 pour lancer le client et le serveur en simultané : lancer "npm run dev:all"
+-->
 
 
 
 Carte des zones du campus avec instruments de mesure :
 https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0
 
+## Créer la base de données
+
+- Créez une base avec le nom et le mdp de votre choix
+- Lancez le script de création de base présent dans "./Base_de_donnees/Script_creation_tables.sql"
+- Créez un fichier .env dans le dossier Base_de_donnees 
+Ceci n'est qu'un exemple, remplacé ces informations par celles de votre base de données.
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=nom_base
+DB_USER=postgres
+DB_PASSWORD=mdp
+```
+
+Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le gitlab (sécurité).
+
+## Requis pour lancer l'application (sans dockerisation)
+
+### Installer NodeJS s'il ne l'ait pas déjà
+
+- Vérifiez si NodeJS est déjà installé ou non sur votre ordinateur avec "node -v"
+- S'il ne l'ait pas, installez le depuis 'nodejs.org'
+    - Installez la version LTS la plus récente
+    - Cochez 'add to Path' et 'install npm package manager'
+
+### Lancer l'application
+
+Installer les dépendances :  
+Mettez-vous dans projet-l3-ecoforum/mon-projet pour avoir accès au package.json qui contient les dépendances à installer.
+```bash
+npm install 
+```
+S'il y a des problèmes avec une dépendance : 
+```
+npm install 'dependance'
+```
+Lancer l'application : 
+```bash
+npm run dev:all
+```
+Le serveur se lancera à l'adresse "http://localhost:5173/".
+
 ## Requis pour lancer les scripts sans l'application
+
+### Appel au controleur pour lancer des scripts
+
 Placez-vous tout d'abord à la base du projet (projet-l3-ecoforum).
 
 Sous Linux : 
@@ -70,6 +98,8 @@ Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonn
 cd mon-projet
 python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
 ```
+
+### JSON à fournir au controleur
 
 Les champs commençant par une * sont obligatoires.
 
