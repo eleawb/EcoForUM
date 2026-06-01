@@ -549,7 +549,7 @@ const supprimerPeriode = (id: string) => {
         setJoursDejaAjoutes(false)
     }
     if (PeriodesASupprimer?.type === 'Heure(s)') {
-        setAnneeDejaAjoutee(false)
+        setHeureDejaAjoutee(false)
     }
     if (PeriodesASupprimer?.type === 'Mois') {
         setMoisDejaAjoute(false)
