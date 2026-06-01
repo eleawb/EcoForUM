@@ -34,7 +34,7 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 ## Créer la base de données
 
 - Créez une base avec le nom et le mdp de votre choix
-- Lancez le script de création de base présent dans "./Base_de_donnees/Script_creation_tables.sql"
+- Lancez le script de création de base présent dans `"./Base_de_donnees/Script_creation_tables.sql"`
 - Créez un fichier .env dans le dossier Base_de_donnees 
 Ceci n'est qu'un exemple, remplacé ces informations par celles de votre base de données.
 ```bash
@@ -51,23 +51,26 @@ Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le
 
 ### Installer NodeJS s'il ne l'ait pas déjà
 
-- Vérifiez si NodeJS est déjà installé ou non sur votre ordinateur avec "node -v"
-- S'il ne l'ait pas, installez le depuis 'nodejs.org'
+- Vérifiez si NodeJS est déjà installé ou non sur votre ordinateur avec :
+```bash
+node -v
+```
+- S'il ne l'ait pas, installez le depuis `"nodejs.org"`
     - Installez la version LTS la plus récente
     - Cochez 'add to Path' et 'install npm package manager'
 
 ### Lancer l'application
 
-Installer les dépendances :  
-Mettez-vous dans projet-l3-ecoforum/mon-projet pour avoir accès au package.json qui contient les dépendances à installer.
+__Installer les dépendances :__  
+Mettez-vous dans `"projet-l3-ecoforum/mon-projet"` pour avoir accès au `"package.json"` qui contient les dépendances à installer.
 ```bash
 npm install 
 ```
-S'il y a des problèmes avec une dépendance : 
+__S'il y a des problèmes avec une dépendance :__ 
 ```
 npm install 'dependance'
 ```
-Lancer l'application : 
+__Lancer l'application :__ 
 ```bash
 npm run dev:all
 ```
@@ -77,23 +80,23 @@ Le serveur se lancera à l'adresse "http://localhost:5173/".
 
 ### Appel au controleur pour lancer des scripts
 
-Placez-vous tout d'abord à la base du projet (projet-l3-ecoforum).
+Placez-vous tout d'abord à la base du projet `"projet-l3-ecoforum"`.
 
-Sous Linux : 
+__Sous Linux :__ 
 ```bash
 python/python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Sous Windows :
+__Sous Windows :__
 ```bash
 python/python3 -m venv .venv
 .venv/Scripts/activate.bat
 pip install -r requirements.txt
 ```
 
-Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonnées depuis le controleur : 
+**Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonnées depuis le controleur :**
 ```bash
 cd mon-projet
 python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
@@ -103,7 +106,7 @@ python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
 
 Les champs commençant par une * sont obligatoires.
 
-Structure type d'un JSON de vérification : 
+__Structure type d'un JSON de vérification :__ 
 ```json
 * "script" : "verification",
 * "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees",
@@ -111,7 +114,7 @@ Structure type d'un JSON de vérification :
 * "num_instrument" : "numero_defini_par_Marine_Zwicke"
 ```
 
-Structure type d'un JSON d'intégration de métadonnées : 
+__Structure type d'un JSON d'intégration de métadonnées :__ 
 ```json
 * "script" : "inte_metadonnees",
 * "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees",
@@ -120,7 +123,7 @@ Structure type d'un JSON d'intégration de métadonnées :
 * "type_script" : ["", ...]
 ```
 
-Structure type d'un JSON d'intégration de fichier de mesure : 
+__Structure type d'un JSON d'intégration de fichier de mesure :__ 
 ```json
 * "script" : "integration",
 * "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees",
