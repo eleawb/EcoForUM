@@ -46,3 +46,25 @@ pour lancer le client et le serveur en simultané : lancer "npm run dev:all"
 Carte des zones du campus avec instruments de mesure :
 https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0
 
+## Requis pour lancer les scripts sans l'application
+Placez-vous tout d'abord à la base du projet (projet-l3-ecoforum).
+
+Sous Linux : 
+```
+python/python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Sous Windows :
+```
+python/python3 -m venv .venv
+.venv/Scripts/activate.bat
+pip install -r requirements.txt
+```
+
+Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonnées depuis le controleur : 
+```
+cd mon-projet
+python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
+```
