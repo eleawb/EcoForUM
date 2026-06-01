@@ -75,16 +75,16 @@ Les champs commençant par une * sont obligatoires.
 
 Structure type d'un JSON de vérification : 
 ```json
-* "script" : "verification"
-* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees"
-* "nom_outil" : "nom_de_l'instrument_de_mesure"
+* "script" : "verification",
+* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees",
+* "nom_outil" : "nom_de_l'instrument_de_mesure",
 * "num_instrument" : "numero_defini_par_Marine_Zwicke"
 ```
 
 Structure type d'un JSON d'intégration de métadonnées : 
 ```json
-* "script" : "inte_metadonnees"
-* "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees"
+* "script" : "inte_metadonnees",
+* "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees",
 # Parmis (Personne, Capteur, Localisation, Projet)
 # Et (Projet => Personne)
 * "type_script" : ["", ...]
@@ -92,14 +92,14 @@ Structure type d'un JSON d'intégration de métadonnées :
 
 Structure type d'un JSON d'intégration de fichier de mesure : 
 ```json
-* "script" : "integration"
-* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees"
-* "type_source" : "fichier"
-* "nom_outil" : "nom_de_l'instrument_de_mesure"
-* "num_instrument" : "numero_defini_par_Marine_Zwicke"
-"num_serie" : "numero_present_dans_le_nom_du_fichier"
+* "script" : "integration",
+* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees",
+* "type_source" : "fichier",
+* "nom_outil" : "nom_de_l'instrument_de_mesure",
+* "num_instrument" : "numero_defini_par_Marine_Zwicke",
+"num_serie" : "numero_present_dans_le_nom_du_fichier",
 # Exemple 'csv', 'xlsx'
-"extension" : "..."
+"extension" : "...",
 "date_recueil" : "YYYY -MM -DD HH :MM :SS",
 "date_import" : "YYYY -MM -DD HH :MM :SS",
 "commentaire" : "...",
