@@ -23,11 +23,13 @@ voir s'il suffit de taper "npm run dependencies" et "devDependencies" pour insta
 TEST POUR SE CONNECTER A LA BDD ECOFORUMV7 (avec intégration données hobo_n°02, hobo_n°36, tms4, dendromètre (puis plus tard intégration par ajout de fichier du reste))
 
 avant tout, créez vous un fichier .env dans /Base_de_donnees et ajoutez : 
+```
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=EcoForumV7
 DB_USER=postgres
 DB_PASSWORD=mdp
+```
 
 et modifiez postgres avec votre nom d'utilisateur sur pgAdmin, et mdp votre mdp pgAdmin
 normalement .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le gitlab (sécurité)
@@ -50,21 +52,63 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 Placez-vous tout d'abord à la base du projet (projet-l3-ecoforum).
 
 Sous Linux : 
-```
+```bash
 python/python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 Sous Windows :
-```
+```bash
 python/python3 -m venv .venv
 .venv/Scripts/activate.bat
 pip install -r requirements.txt
 ```
 
 Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonnées depuis le controleur : 
-```
+```bash
 cd mon-projet
 python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
+```
+
+Les champs commençant par une * sont obligatoires.
+
+Structure type d'un JSON de vérification : 
+```json
+* "script" : "verification"
+* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees"
+* "nom_outil" : "nom_de_l'instrument_de_mesure"
+* "num_instrument" : "numero_defini_par_Marine_Zwicke"
+```
+
+Structure type d'un JSON d'intégration de métadonnées : 
+```json
+* "script" : "inte_metadonnees"
+* "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees"
+# Parmis (Personne, Capteur, Localisation, Projet)
+# Et (Projet => Personne)
+* "type_script" : ["", ...]
+```
+
+Structure type d'un JSON d'intégration de fichier de mesure : 
+```json
+* "script" : "integration"
+* "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees"
+* "type_source" : "fichier"
+* "nom_outil" : "nom_de_l'instrument_de_mesure"
+* "num_instrument" : "numero_defini_par_Marine_Zwicke"
+"num_serie" : "numero_present_dans_le_nom_du_fichier"
+# Exemple 'csv', 'xlsx'
+"extension" : "..."
+"date_recueil" : "YYYY -MM -DD HH :MM :SS",
+"date_import" : "YYYY -MM -DD HH :MM :SS",
+"commentaire" : "...",
+
+* "mail_responsable" : "nom@example.com",
+* "est_responsable_fichier" : false,
+# A ajouter si la personne n'est pas déjà un responsable
+"nom" : "nom",
+"prenom" : "prenom",
+"fonction" : "...",
+"encadre_par" : "nom2@example.com"
 ```
