@@ -1,13 +1,14 @@
-# Projet L3 EcoForum
+# Projet L3 EcoForum 2025-2026
 
 [Lien vers le drive du projet](https://drive.google.com/drive/folders/1pDWjVzZtVJSltq6X1iO6_A5gh6dT9goN)
 
-## Nom des étudiants
+## Nom des étudiants en L3 informatique
 - Aurore Minihot
 - Éléa Weber
 - Ernest Niederman
 - Francisco Ernesto Suarez Roca
 - Maeva Zerbib
+- Olivia Aing
 - Oriane Roux
 
 ## Nom des encadrants
@@ -117,10 +118,11 @@ __Structure type d'un JSON de vérification :__
 __Structure type d'un JSON d'intégration de métadonnées :__ 
 ```json
 * "script" : "inte_metadonnees",
-* "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees",
 # Parmis (Personne, Capteur, Localisation, Projet)
 # Et (Projet => Personne)
-* "type_script" : ["", ...]
+* "type_script" : ["", ...],
+# Dans le même ordre que les scripts
+* "fichier_donnees" : ["nom_de_fichier_contenant_les_metadonnees", ...]
 ```
 
 __Structure type d'un JSON d'intégration de fichier de mesure :__ 
@@ -133,8 +135,8 @@ __Structure type d'un JSON d'intégration de fichier de mesure :__
 "num_serie" : "numero_present_dans_le_nom_du_fichier",
 # Exemple 'csv', 'xlsx'
 "extension" : "...",
-"date_recueil" : "YYYY -MM -DD HH :MM :SS",
-"date_import" : "YYYY -MM -DD HH :MM :SS",
+"date_recueil" : "YYYY-MM-DD HH:MM:SS",
+"date_import" : "YYYY-MM-DD HH:MM:SS",
 "commentaire" : "...",
 
 * "mail_responsable" : "nom@example.com",
