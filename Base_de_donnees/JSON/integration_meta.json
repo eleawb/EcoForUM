@@ -1,0 +1,5 @@
+{
+    "script" : "inte_metadonnees",
+    "type_script" : ["personne", "capteur", "localisation", "projet"],
+    "fichier_donnees" : ["videPers.xlsx", "videInstr.xlsx", "videLoc.xlsx", "videProj.xlsx"]
+}
