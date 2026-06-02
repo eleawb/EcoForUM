@@ -557,6 +557,18 @@ return(
                     <MenuItem value="dossier_image">dossier_image</MenuItem>
                     </Select>
                     </FormControl>
+
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <TextField
+                        label="Commentaire"
+                        variant="outlined"
+                        fullWidth
+                        //required
+                        //value={extension}
+                        //onChange={(e) => setExtension(e.target.value)}
+                        placeholder="Commentaire sur le fichier"
+                      />
+                    </Stack>
                   
                   </>
                 )}
