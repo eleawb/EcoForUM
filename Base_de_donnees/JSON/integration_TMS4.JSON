@@ -7,7 +7,7 @@
     "fonction" : "Developpeur",
     "encadre_par" : "marine.zwicke@umontpellier.fr",
    
-    "chemin_source" : "./TMS4/data_95224601_2024_11_19_0.csv",
+    "chemin_source" : "../Base_de_donnees/TMS4/data_95224601_2024_11_19_0.csv",
     "type_source" : "fichier_mesure",
     "nom_outil" : "TMS4",
     "num_instrument" : "TMS4_95224601",
