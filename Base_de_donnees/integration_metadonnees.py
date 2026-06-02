@@ -46,9 +46,12 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficLoc, ficProj):
         chemin = os.path.join(os.getcwd(), "Base_de_donnees","Fichiers_metadonnees")
     elif Path(os.getcwd()).stem == "Base_de_donnees":
         chemin = os.path.join(os.getcwd(),"Fichiers_metadonnees")
+    elif Path(os.getcwd()).stem == "mon-projet":
+        chemin = "../Base_de_donnees/Fichiers_metadonnees"
     else :
         dico["commentaire"] = "Je ne sais pas d'où je suis lancé... (donc je ne sais pas comment ajuster le chemin vers le dossier contenant les fichiers de métadonnées)"
         print(json.dumps(dico))
+        return False
 
     #Ouverture de tous les fichiers .xlsx de métadonnées avec pandas + récupération dans des listes des noms des onglets
     dfPers = pd.read_excel(os.path.join(chemin, ficPers), sheet_name=None)
