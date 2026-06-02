@@ -37,7 +37,7 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 - Créez une base avec le nom et le mdp de votre choix
 - Lancez le script de création de base présent dans `"./Base_de_donnees/Script_creation_tables.sql"`
 - Créez un fichier .env dans le dossier Base_de_donnees 
-Ceci n'est qu'un exemple, remplacé ces informations par celles de votre base de données.
+Ceci n'est qu'un exemple, remplacez ces informations par celles de votre base de données.
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
@@ -50,14 +50,14 @@ Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le
 
 ## Requis pour lancer l'application (sans dockerisation)
 
-### Installer NodeJS s'il ne l'ait pas déjà
+### Installer NodeJS et npm si besoin
 
 - Vérifiez si NodeJS et npm sont déjà installés ou non sur votre ordinateur avec :
 ```bash
 node -v
 npm -v
 ```
-- S'il ne l'est pas (la version ne s'affiche pas), installez le depuis `"nodejs.org"`
+- S'ils ne le sont pas (la version ne s'affiche pas), installez les depuis `"nodejs.org"`
     - Installez la version LTS la plus récente
     - Cochez 'add to Path' et 'install npm package manager'
 
