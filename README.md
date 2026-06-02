@@ -52,11 +52,12 @@ Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le
 
 ### Installer NodeJS s'il ne l'ait pas déjà
 
-- Vérifiez si NodeJS est déjà installé ou non sur votre ordinateur avec :
+- Vérifiez si NodeJS et npm sont déjà installés ou non sur votre ordinateur avec :
 ```bash
 node -v
+npm -v
 ```
-- S'il ne l'ait pas, installez le depuis `"nodejs.org"`
+- S'il ne l'est pas (la version ne s'affiche pas), installez le depuis `"nodejs.org"`
     - Installez la version LTS la plus récente
     - Cochez 'add to Path' et 'install npm package manager'
 
