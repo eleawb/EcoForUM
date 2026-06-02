@@ -38,14 +38,14 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   const [utilisateur, setUtilisateur] = useState<string>('');
   const [selectedResponsable,setSelectedResponsable] = useState<string>('');
   const [responsables, setResponsablesDisponibles] = useState<any[]>([]);
-  const [isNewResponsable, setIsNewResponsable] = useState<boolean>(false);//Check si le repssable fichier fut cree pour cet ajout
+  const [isNewResponsable, setIsNewResponsable] = useState<boolean>(false);//Check si le responsable fichier fut cree pour cet ajout
   const [showCreationRespInputs, setShowCreationRespInputs] = useState<boolean>(false);
   const [nom, setNom] = useState<string>('');
   const [prenom, setPrenom] = useState<string>('');
   const [mail, setMail] = useState<string>('');
   const [numSerie, setNumSerie] = useState<string>('');
   const [extension, setExtension] = useState<string>('');
-  const [dateCueilli, setDateCueilli] = useState<string>('');
+  const [dateRecueil, setDateRecueil] = useState<string>('');
   const [dateImport, setDateImport] = useState<string>('');
   const [typeSource, setTypeSource] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -164,7 +164,7 @@ const AutofillDate = () => {
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
-      setDateImport(`${year}-${month}-${day}`);
+      setDateRecueil(`${year}-${month}-${day}`);
     };
 
 const handleCreateResponsable = async () => {
@@ -267,15 +267,15 @@ const handleCreateResponsable = async () => {
     if (verificationData.numero_serie) {
       setNumSerie(verificationData.numero_serie);
     }
-    // completion de Date de cueilli 
+    // completion de Date de recueil 
     if (verificationData.date_recueil) {
       //formattage de la date problemes avec le format du HOBO
       const dateStr = verificationData.date_recueil;
       if (dateStr.length === 8) {
         const formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
-        setDateCueilli(formattedDate);
+        setDateRecueil(formattedDate);
       } else {
-        setDateCueilli(dateStr);
+        setDateRecueil(dateStr);
       }
     }
     // completion Extension
@@ -502,15 +502,23 @@ return(
                     
                   <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
-                        label="Date de cueillie"
+                        label="Date de recueil"
                         type="date"
                         variant="outlined"
                         fullWidth
                         required
-                        value={dateCueilli}
-                        onChange={(e) => setDateCueilli(e.target.value)}
+                        value={dateRecueil}
+                        onChange={(e) => setDateRecueil(e.target.value)}
                         InputLabelProps={{ shrink: true }}
                       />
+                      <Button
+                        type="button"
+                        variant="outlined"
+                        onClick={AutofillDate}
+                        sx={{ minWidth: '100px', height: '56px' }}
+                        >
+                        Aujourd'hui
+                      </Button>
                     </Stack>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
@@ -523,14 +531,6 @@ return(
                         onChange={(e) => setDateImport(e.target.value)}
                         InputLabelProps={{ shrink: true }}
                       />
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        onClick={AutofillDate}
-                        sx={{ minWidth: '100px', height: '56px' }}
-                        >
-                        Aujourd'hui
-                      </Button>
                     </Stack>
 
                     <Stack direction="row" spacing={2} alignItems="center">
