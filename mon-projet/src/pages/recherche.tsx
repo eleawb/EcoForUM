@@ -32,6 +32,7 @@ import {
   FormControlLabel,
   Checkbox
 } from '@mui/material'
+import { apiFetch } from '../api';
 
 function Recherche() {
     const navigate = useNavigate()
@@ -81,11 +82,11 @@ function Recherche() {
             console.log("début du fetch data")
             try {
 
-                const instrumentsRes = await fetch('http://localhost:3000/api/instruments') //récupérer les instruments de la bdd
+                const instrumentsRes = await apiFetch('/api/instruments') //récupérer les instruments de la bdd
                 const instrumentsData = await instrumentsRes.json() //conversion 
                 setInstrumentsDisponibles(instrumentsData || []) //si pas de données, on laisse vide
                 
-                const categoriesRes = await fetch('http://localhost:3000/api/categories') //récupérer les catégories de la bdd
+                const categoriesRes = await apiFetch('/api/categories') //récupérer les catégories de la bdd
                 const categoriesData = await categoriesRes.json() //conversion
                 console.log("Catégories reçues du backend:", categoriesData) //debug
                 setCategories([...categoriesData]) //
@@ -147,7 +148,7 @@ function Recherche() {
 
       
       try {
-          const response = await fetch('http://localhost:3000/api/instruments/by-categories', {  //on lance la recherche d'instruments par catégorie
+          const response = await apiFetch('/api/instruments/by-categories', {  //on lance la recherche d'instruments par catégorie
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ categories: nomsCategories }) //conversion
@@ -435,7 +436,7 @@ const renderCategoryTree = (categorie: any, depth: number) => {
         //c'est parti
         try {
             //on lance la recherche avec tous ces params
-            const response = await fetch(`http://localhost:3000/api/recherche`, { 
+            const response = await apiFetch('/api/recherche', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

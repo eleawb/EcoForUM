@@ -14,7 +14,7 @@ import {
   Stack //aligner boutons en colonne par ex
 } from '@mui/material'//import MUI
 import { Person as PersonIcon, Add as AddIcon, Delete as DeleteIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material' //icônes visuelles
-
+import { apiFetch } from '../api';
 
 function Accueil() { //composant principal
   const navigate = useNavigate()

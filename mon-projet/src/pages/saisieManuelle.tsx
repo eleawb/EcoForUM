@@ -22,6 +22,7 @@ import {
   MenuItem
 } from '@mui/material'; //import MUI
 import { SelectChangeEvent } from '@mui/material/Select';
+import { apiFetch } from '../api';
 
 function SaisieManuelle(){
 const navigate = useNavigate()
@@ -34,7 +35,7 @@ const navigate = useNavigate()
             const fetchData = async () => {
                 console.log("début du fetch data")
                 try {
-                      const instrumentsRes = await fetch('http://localhost:3000/api/instruments') //récupérer les instruments de la bdd
+                      const instrumentsRes = await apiFetch('/api/instruments') //récupérer les instruments de la bdd
                       const instrumentsData = await instrumentsRes.json() //conversion 
                       setInstrumentsDisponibles(instrumentsData || []) //si pas de données, on laisse vide
                     }

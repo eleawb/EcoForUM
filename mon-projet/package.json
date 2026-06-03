@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview" : "vite preview --host",
     "server": "node server/index.cjs",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },

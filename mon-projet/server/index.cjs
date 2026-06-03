@@ -1,4 +1,4 @@
-require('dotenv').config({path: '../Base_de_donnees/.env'})
+require('dotenv').config({path: '../Base_de_donnees/.env'}) // charge le .env du serveur
 
 const express = require('express')
 const cors = require('cors')
@@ -13,8 +13,48 @@ const { spawn } = require('child_process')
 const app = express()
 const port = 3000
 
+//import + utilisation d'os pour trouver le hostname du serveur, plus utile maintenant que l'on passe par ngrok
+//const os = require('os');
+//const hostname = os.hostname();
+//const SERVER_URL = `http://${hostname}:3000`;
+
+async function waitForNgrokUrl(maxRetries = 20, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const res = await fetch("http://127.0.0.1:4040/api/tunnels");
+      const data = await res.json();
+
+      const httpsTunnel = data.tunnels.find(t => t.proto === "https");
+      if (httpsTunnel) {
+        console.log("Ngrok détecté :", httpsTunnel.public_url);
+        return httpsTunnel.public_url;
+      }
+    } catch (e) {
+      // ngrok pas encore lancé → on attend
+    }
+
+    console.log(`En attente de ngrok... (${i + 1}/${maxRetries})`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  console.warn("Ngrok non détecté après plusieurs tentatives.");
+  return null;
+}
+
+
 app.use(cors())
 app.use(express.json())
+
+//envoi du hostname du serveur au client
+//app.get('/api/server-info', (req, res) => {
+  //res.json({ url: SERVER_URL });
+//});
+
+app.get("/api/server-info", async (req, res) => {
+  const url = await waitForNgrokUrl();
+  res.json({ url });
+});
+
 
 /* bdd fictive francisco
 const client = new Client({
@@ -87,6 +127,9 @@ app.get('/api/categories', async (req, res) => {
 //route pour récupérer les instruments par catégories
 app.post('/api/instruments/by-categories', async (req, res) => {
     const { categories } = req.body
+    if (!categories || categories.length === 0) {
+        return res.json([]); // renvoie une liste vide proprement
+    }
     //debugs
     console.log(`Nb de catégories sélectionnées: ${categories.length}`)
     console.log(`Recherche des instruments pour les catégories:`, categories)
@@ -717,7 +760,7 @@ app.post('/api/scriptVerif', async (req, res) => {
         // CALL CONTROLEUR.PY (not the specific script directly)
         const options = {
             mode: 'text',
-            pythonPath: 'python',
+            pythonPath: 'python3',
             pythonOptions: ['-u'],
             scriptPath: path.join('../Base_de_donnees'), // Point to mon-projet folder where controleur.py is
             args: [tempJsonPath]
@@ -759,7 +802,19 @@ VERIFICATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */
 
+//NE PAS TOUCHER - rajouter les autres routes AU-DESSUS !
+//pour rendre le site accessible à tous via le build
+app.use(express.static(path.join(__dirname, '../dist')));
+
+//app.get('*', (req, res) => {
+  //res.sendFile(path.join(__dirname, '../dist/index.html'));
+//});
+
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 app.listen(port, () => {
-    console.log(`Serveur démarré sur http://localhost:${port}`)
+    console.log(`Serveur démarré sur http://0.0.0.0:${port}`)
 })
 

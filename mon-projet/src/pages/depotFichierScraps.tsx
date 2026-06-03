@@ -21,6 +21,7 @@ import {
   MenuItem
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
+import { apiFetch } from '../api';
 
 function DepotFichier(){
     const navigate = useNavigate();
@@ -62,12 +63,12 @@ const fetchData = async () => {
             console.log("début du fetch data")
             try {
 
-                const instrumentsRes = await fetch('http://localhost:3000/api/instruments')
+                const instrumentsRes = await apiFetch('/api/instruments')
                 const instrumentsData = await instrumentsRes.json()
                 console.log("instruments reçues du backend:", instrumentsData) 
                 setInstrumentsDisponibles(instrumentsData || [])
 
-                const respononsablesRes = await fetch('http://localhost:3000/api/responsables')
+                const respononsablesRes = await apiFetch('/api/responsables')
                 const respononsablesData = await respononsablesRes.json()
                 console.log("Respononsables reçues du backend:", respononsablesData)
                 setResponsablesDisponibles(respononsablesData || [])
@@ -90,7 +91,7 @@ useEffect(() => {
               }
 
               try {
-                const response = await fetch('http://localhost:3000/api/responsable_fichier', {
+                const response = await apiFetch('/api/responsable_fichier', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -342,7 +343,7 @@ const extractDateFromFilename = (fileName: string, instrumentType: string): stri
         formData.append('file', file);
         
         try {
-          const response = await fetch('http://localhost:3000/api/upload', {
+          const response = await apiFetch('/api/upload', {
             method: 'POST',
             body: formData,
           });

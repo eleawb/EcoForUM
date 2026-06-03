@@ -20,6 +20,7 @@ import {
   CircularProgress,
   FormControlLabel
 } from '@mui/material'
+import { apiFetch } from '../api';
 
 function ResultatsRecherche() {
 

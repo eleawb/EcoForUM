@@ -21,6 +21,7 @@ import {
   MenuItem
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
+import { apiFetch } from '../api';
 
 function DepotFichier(){
   const navigate = useNavigate();
@@ -61,12 +62,14 @@ const fetchData = async () => {
             console.log("début du fetch data")
             try {
 
-                const instrumentsRes = await fetch('http://localhost:3000/api/instruments')
+                //const instrumentsRes = await fetch('http://localhost:3000/api/instruments')
+                //const instrumentsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/instruments`)
+                const instrumentsRes = await apiFetch('/api/instruments');
                 const instrumentsData = await instrumentsRes.json()
                 console.log("Instruments reçus du backend:", instrumentsData) 
                 setInstrumentsDisponibles(instrumentsData || [])
 
-                const respononsablesRes = await fetch('http://localhost:3000/api/responsables')
+                const respononsablesRes = await apiFetch('/api/responsables')
                 const respononsablesData = await respononsablesRes.json()
                 console.log("Responsables reçus du backend:", respononsablesData)
                 setResponsablesDisponibles(respononsablesData || [])
@@ -112,7 +115,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         formData.append('file', file);
         
         try {
-          const response = await fetch('http://localhost:3000/api/upload', {
+          const response = await apiFetch('/api/upload', {
             method: 'POST',
             body: formData,
         });
@@ -175,7 +178,7 @@ const handleCreateResponsable = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/responsable_fichier', {
+    const response = await apiFetch('/api/responsable_fichier', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -235,7 +238,7 @@ const handleCreateResponsable = async () => {
     
     try {
       {/*console.log(nom_outil,num_instrument);*/}
-      const response = await fetch('http://localhost:3000/api/scriptVerif', {
+      const response = await apiFetch('/api/scriptVerif', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +306,7 @@ const sendFormInfo = async (nom_outil: string, type_source: string, num_instrume
     
     try {
       
-      const response = await fetch('http://localhost:3000/api/scriptInte', {
+      const response = await apiFetch('/api/scriptInte', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
