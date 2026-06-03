@@ -19,16 +19,19 @@ def meta(choixScript, type_fichiers, fichiers):
     for i in range(len(type_fichiers)):
         match type_fichiers[i]:
             case "personne":
-                args.append(f"--ficPers {fichiers[i]}")
+                args.append("--ficPers")
+                args.append(fichiers[i])
             case "capteur":
-                args.append(f"--ficInstr {fichiers[i]}")
+                args.append("--ficInstr")
+                args.append(fichiers[i])
             case "localisation":
                 args.append("--ficLoc")
                 args.append(fichiers[i])
             case "projet":
                 if "personne" not in type_fichiers:
                     sys.exit(json.dumps({"reussite":False, "commentaire":f"Pas de {choixScript} de projet sans {choixScript} de personne"}))
-                args.append(f"--ficProj {fichiers[i]}")
+                args.append("--ficProj")
+                args.append(fichiers[i])
     try:
         retour = subprocess.run([sys.executable, f"../Base_de_donnees/{choixScript}_metadonnees.py"]+args, shell=True, capture_output=True, text=True, check=True)
         #Exécution du script en permettant de stocker la valeur de "retour"(les print)
@@ -36,7 +39,7 @@ def meta(choixScript, type_fichiers, fichiers):
     except subprocess.CalledProcessError as e:
         print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des metadonnees a echoue avec le code d'erreur : {e.returncode}"}))
         #"Retour" de notre script si tout ne s'est pas bien passé
-        #print(e.stderr)               #Si l'on veut voir tout le message d'erreur effectuer par le script défectueux
+        print(e.stderr)               #Si l'on veut voir tout le message d'erreur effectuer par le script défectueux
         #sys.exit(e.stdout)            #Si l'on veut voir tout les print effectuer par le script défectueux
 
 
@@ -70,7 +73,7 @@ def nonMeta(choixScript, instrument, metaJson, cheminFichierMesure):
             print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des donnees a echoue avec le code d'erreur : {e.returncode} et la copie du fichier n'a pas pu etre supprimer"}))
         
         print(e.stderr)            #Si l'on veut voir le message d'erreur effectuer par le script défectueux
-        #print(e.stdout)            #Si l'on veut voir les print effectuer par le script défectueux jusqu'au moment de l'erreur
+        print(e.stdout)            #Si l'on veut voir les print effectuer par le script défectueux jusqu'au moment de l'erreur
 
 
 if __name__ == "__main__":

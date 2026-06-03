@@ -1,0 +1,5 @@
+{
+    "type_script" : ["personne", "capteur", "localisation", "projet"],
+    "script" : "inte_metadonnees",
+    "fichier_donnees" : ["Metadonnees_personnes.xlsx", "Metadonnees_instruments_capteurs.xlsx", "Metadonnees_localisations.xlsx", "Metadonnees_projets.xlsx"]
+}

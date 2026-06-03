@@ -1,13 +1,14 @@
-# Projet L3 EcoForum
+# Projet L3 EcoForum 2025-2026
 
 [Lien vers le drive du projet](https://drive.google.com/drive/folders/1pDWjVzZtVJSltq6X1iO6_A5gh6dT9goN)
 
-## Nom des étudiants
+## Nom des étudiants en L3 informatique
 - Aurore Minihot
 - Éléa Weber
 - Ernest Niederman
 - Francisco Ernesto Suarez Roca
 - Maeva Zerbib
+- Olivia Aing
 - Oriane Roux
 
 ## Nom des encadrants
@@ -36,7 +37,7 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 - Créez une base avec le nom et le mdp de votre choix
 - Lancez le script de création de base présent dans `"./Base_de_donnees/Script_creation_tables.sql"`
 - Créez un fichier .env dans le dossier Base_de_donnees 
-Ceci n'est qu'un exemple, remplacé ces informations par celles de votre base de données.
+Ceci n'est qu'un exemple, remplacez ces informations par celles de votre base de données.
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
@@ -49,13 +50,14 @@ Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le
 
 ## Requis pour lancer l'application (sans dockerisation)
 
-### Installer NodeJS s'il ne l'ait pas déjà
+### Installer NodeJS et npm si besoin
 
-- Vérifiez si NodeJS est déjà installé ou non sur votre ordinateur avec :
+- Vérifiez si NodeJS et npm sont déjà installés ou non sur votre ordinateur avec :
 ```bash
 node -v
+npm -v
 ```
-- S'il ne l'ait pas, installez le depuis `"nodejs.org"`
+- S'ils ne le sont pas (la version ne s'affiche pas), installez les depuis `"nodejs.org"`
     - Installez la version LTS la plus récente
     - Cochez 'add to Path' et 'install npm package manager'
 
@@ -117,10 +119,11 @@ __Structure type d'un JSON de vérification :__
 __Structure type d'un JSON d'intégration de métadonnées :__ 
 ```json
 * "script" : "inte_metadonnees",
-* "nom_fichier_meta" : "nom_de_fichier_contenant_les_metadonnees",
 # Parmis (Personne, Capteur, Localisation, Projet)
 # Et (Projet => Personne)
-* "type_script" : ["", ...]
+* "type_script" : ["", ...],
+# Dans le même ordre que les scripts
+* "fichier_donnees" : ["nom_de_fichier_contenant_les_metadonnees", ...]
 ```
 
 __Structure type d'un JSON d'intégration de fichier de mesure :__ 
@@ -133,8 +136,8 @@ __Structure type d'un JSON d'intégration de fichier de mesure :__
 "num_serie" : "numero_present_dans_le_nom_du_fichier",
 # Exemple 'csv', 'xlsx'
 "extension" : "...",
-"date_recueil" : "YYYY -MM -DD HH :MM :SS",
-"date_import" : "YYYY -MM -DD HH :MM :SS",
+"date_recueil" : "YYYY-MM-DD HH:MM:SS",
+"date_import" : "YYYY-MM-DD HH:MM:SS",
 "commentaire" : "...",
 
 * "mail_responsable" : "nom@example.com",

@@ -154,9 +154,9 @@ def insert_serie_temporelle(id_source_donnees, nom_inst, num_col, type_mesure):
         # Créé la nouvelle serie temporelle
         cur.execute("""
             INSERT INTO serie_temporelle 
-                (date_debut, date_fin, max_mesure, min_mesure, moyenne_mesure, 
+                (date_debut, date_fin, max_mesure, min_mesure, 
                 nb_mesures, id_capteur_gen, id_loc, date_capteur_loc, id_variable_mesuree)
-                VALUES (%s, NULL, %s, %s, 0, 0, %s, %s, %s, %s)
+                VALUES (%s, NULL, %s, %s, 0, %s, %s, %s, %s)
                 RETURNING id_st
                 """,\
             (date_capteur_loc, float('-inf'), float('inf'), id_capteur, id_loc, date_capteur_loc, id_variable_mesuree))
@@ -375,8 +375,8 @@ if __name__ == "__main__":
 
 """
 -- Prendre 1er ligne fichier puis dernière ?
-INSERT INTO serie_temporelle (date_debut, date_fin, max_mesure, min_mesure, moyenne_mesure, nb_mesures) VALUES
-    (2023-09-01 00:00:00, 2023-09-24 23:45:00, Infinity, -Infinity, 0, 0);
+INSERT INTO serie_temporelle (date_debut, date_fin, max_mesure, min_mesure, nb_mesures) VALUES
+    (2023-09-01 00:00:00, 2023-09-24 23:45:00, Infinity, -Infinity, 0);
 -- Date début, même que date_debut de capteur_localise et date_fin dernière val fichier
 
 INSERT INTO mesure (valeur_mesure, date_heure, description_mesure, statut, id_mesure_associee, id_st) VALUES

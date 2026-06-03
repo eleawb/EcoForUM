@@ -397,7 +397,6 @@ CREATE TABLE serie_temporelle (
     date_fin TIMESTAMP,
     max_mesure DOUBLE PRECISION,
     min_mesure DOUBLE PRECISION,
-    moyenne_mesure DOUBLE PRECISION,
     nb_mesures INT,
     id_capteur_gen INT NOT NULL,
     id_loc INT NOT NULL,
@@ -608,10 +607,6 @@ BEGIN
         min_mesure = LEAST(
             COALESCE(min_mesure, NEW.valeur_mesure::DOUBLE PRECISION),
             NEW.valeur_mesure::DOUBLE PRECISION
-        ),
-        moyenne_mesure = (
-            (COALESCE(moyenne_mesure, 0) * COALESCE(nb_mesures, 0) + NEW.valeur_mesure::DOUBLE PRECISION)
-            / (COALESCE(nb_mesures, 0) + 1)
         ),
         date_fin = GREATEST(
             COALESCE(date_fin, NEW.date_heure),

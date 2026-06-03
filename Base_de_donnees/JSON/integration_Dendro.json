@@ -7,7 +7,7 @@
     "fonction" : "Developpeur",
     "encadre_par" : "marine.zwicke@umontpellier.fr",
    
-    "chemin_source" : "./Dendrometre/data_dendro_92261195_2026_03_26_0.csv",
+    "chemin_source" : "../Base_de_donnees/Dendrometre/data_dendro_92261195_2026_03_26_0.csv",
     "type_source" : "fichier_mesure",
     "nom_outil" : "Dendrometre",
     "num_instrument" : "Dendro_92261195",
