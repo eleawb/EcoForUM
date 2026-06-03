@@ -760,7 +760,7 @@ app.post('/api/scriptVerif', async (req, res) => {
         // CALL CONTROLEUR.PY (not the specific script directly)
         const options = {
             mode: 'text',
-            pythonPath: 'python3',
+            pythonPath: 'python',
             pythonOptions: ['-u'],
             scriptPath: path.join('../Base_de_donnees'), // Point to mon-projet folder where controleur.py is
             args: [tempJsonPath]
