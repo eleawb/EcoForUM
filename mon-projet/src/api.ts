@@ -15,6 +15,12 @@ async function waitForNgrokUrl() {
 }
 
 export async function apiFetch(path: string, options?: RequestInit) {
+  // MODE DEV : vite est en localhost:5173
+  if (window.location.hostname === "localhost") {
+    return fetch(`http://localhost:3000${path}`, options);
+  }
+
+  // MODE NGROK : on récupère l'URL dynamique
   if (!apiUrl) {
     apiUrl = await waitForNgrokUrl();
   }
