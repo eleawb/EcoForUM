@@ -249,6 +249,8 @@ CREATE TABLE instrument_mesure (
 CREATE TABLE collecte_instrument (
     id_collecteur INT,
     id_instrument INT,
+    date_debut DATE,
+    date_fin DATE,
     CONSTRAINT PK_collecte_instrument PRIMARY KEY (id_collecteur, id_instrument),
     CONSTRAINT FK_collecte_instrument_collecteur
         FOREIGN KEY (id_collecteur)
@@ -259,7 +261,8 @@ CREATE TABLE collecte_instrument (
         FOREIGN KEY (id_instrument)
         REFERENCES instrument_mesure (id_instrument)
         ON UPDATE CASCADE
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT CK_collecte_instrument_dates CHECK (date_debut <= date_fin)
 );
 
 CREATE TABLE remplacement_instrument (
