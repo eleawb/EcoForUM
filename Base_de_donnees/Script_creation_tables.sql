@@ -438,7 +438,7 @@ CREATE TABLE source_donnees (
     nom_source VARCHAR(255),
     chemin_source VARCHAR(500),
     date_import TIMESTAMP,
-    date_recueil TIMESTAMP,
+    date_collecte TIMESTAMP,
     commentaire TEXT,
     type_source VARCHAR(50),
     id_responsable INT NOT NULL,
@@ -761,7 +761,7 @@ INSERT INTO variable_mesuree (type_mesure, unite_mesure, description_var_mesuree
 
 INSERT INTO possede_categorie (id_variable, id_categorie) VALUES
     -- Hobo
-    ((SELECT id_variable_mesuree FROM variable_mesuree WHERE type_mesure = ' Température , °C'), 
+    ((SELECT id_variable_mesuree FROM variable_mesuree WHERE type_mesure = 'Température , °C'), 
     (SELECT id_categorie FROM categorie_variable WHERE nom = 'Température Air')),
     -- TMS4
     ((SELECT id_variable_mesuree FROM variable_mesuree WHERE type_mesure = 'Température -6cm'), 
