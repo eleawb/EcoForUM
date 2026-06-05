@@ -66,6 +66,17 @@ CREATE TABLE capteur_generique (
     CONSTRAINT uq_capteur_generique_description UNIQUE (description)
 );
 
+CREATE TABLE utilisateur (
+    id_utilisateur INT,
+    mdp VARCHAR(255) NOT NULL,
+    CONSTRAINT PK_utilisateur PRIMARY KEY (id_utilisateur),
+    CONSTRAINT FK_utilisateur_personne
+        FOREIGN KEY (id_utilisateur)
+        REFERENCES personne (id_personne)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
 CREATE TABLE collecteur (
     id_collecteur INT,
     CONSTRAINT PK_collecteur PRIMARY KEY (id_collecteur),
@@ -708,7 +719,7 @@ INSERT INTO categorie_variable (nom, id_parent) VALUES
 
 INSERT INTO structure_fichier (extension, nom_colonnes, nb_colonnes, colonnes_a_traiter, format_titre, nom_instrument) VALUES 
     -- Hobo
-    ('xlsx', '#; Date et heure (CET/CEST) || (CET) || (CEST); Température , °C', 
+    ('xlsx', '#;Date et heure (CET/CEST)||Date et heure (CET)||Date et heure (CEST);Température , °C', 
     3, '0; 0; 1', 
     '\(n°[0-9]+\) [0-9]+ ? [0-9]+-[0-9]+-[0-9]+ [0-9]+_[0-9]+_[0-9]+ CES?T\.xlsx', 'Hobo'),
     -- TMS4
@@ -731,7 +742,7 @@ INSERT INTO structure_fichier (extension, nom_colonnes, nb_colonnes, colonnes_a_
 
 INSERT INTO variable_mesuree (type_mesure, unite_mesure, description_var_mesuree) VALUES
     -- Hobo
-    (' Température , °C', '°C', 'Température de l air prise par le Hobo'),
+    ('Température , °C', '°C', $Température de l air prise par le Hobo$),
     -- TMS4
     ('Température -6cm', '°C', 'Température prise par le TMS4 à -6cm du sol'),
     ('Température 2cm', '°C', 'Température prise par le TMS4 à 2cm du sol'),
