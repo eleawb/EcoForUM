@@ -1267,12 +1267,12 @@ const renderPeriodeInput = (periode: {id: string, type: string, valeur: string})
                                                             <Typography variant="subtitle2" sx={{ color: '#0370B2' }}>
                                                                 {periode.type}
                                                             </Typography>
-                                                                    {/*pas de bouton supprimer pour Jour(s), Mois et Année(s) car strict minimum pr recuperer les données*/}
-                                                                    {periode.type !=='Jour(s)' && periode.type !== 'Mois' && periode.type !== 'Année(s)' && (
-                                                                        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => supprimerPeriode(periode.id)}>
+                                                                    {/*pas de bouton supprimer pour Jour(s), Mois et Année(s) car strict minimum pr recuperer les données
+                                                                    update : ça change rien au final ça marche*/}
+                                                                    {<Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => supprimerPeriode(periode.id)}>
                                                                         Supprimer
                                                                     </Button>
-                                                                    )}
+                                                                    }
                                                         </Box>
                                                         {renderPeriodeInput(periode)}
                                                     </Stack>
