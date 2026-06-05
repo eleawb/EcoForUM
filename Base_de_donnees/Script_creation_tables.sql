@@ -742,7 +742,7 @@ INSERT INTO structure_fichier (extension, nom_colonnes, nb_colonnes, colonnes_a_
 
 INSERT INTO variable_mesuree (type_mesure, unite_mesure, description_var_mesuree) VALUES
     -- Hobo
-    ('Température , °C', '°C', $Température de l air prise par le Hobo$),
+    ('Température , °C', '°C', 'Température de l air prise par le Hobo'),
     -- TMS4
     ('Température -6cm', '°C', 'Température prise par le TMS4 à -6cm du sol'),
     ('Température 2cm', '°C', 'Température prise par le TMS4 à 2cm du sol'),

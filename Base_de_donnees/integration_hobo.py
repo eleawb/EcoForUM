@@ -125,7 +125,7 @@ def integration_hobo(ficjson):
         data = json.load(f)
 
     #normalisation du chemin continue ici
-    data["chemin_source"] = normaliser_chemin(data["chemin_source"])
+    #data["chemin_source"] = normaliser_chemin(data["chemin_source"])
     fichier = data["chemin_source"]
     
     # Charger uniquement le premier onglet avec pandas
@@ -161,23 +161,26 @@ def integration_hobo(ficjson):
             cur.execute("SELECT nom_colonnes, colonnes_a_traiter FROM structure_fichier sf JOIN instrument_mesure im ON lower(im.nom_outil) = lower(sf.nom_instrument) WHERE lower(im.num_instrument) = lower(%s);", (data["num_instrument"],))
             row = list(cur.fetchone()) #censé renvoyer un tuple, que je transforme en liste
             noms_colonnes = []
-            row[0] = row[0].split("; ")
-            row[1] = row[1].split("; ")
+            row[0] = row[0].split(";")
+            row[1] = row[1].split(";")
             for i in range(len(row[0])):
                 if int(row[1][i]) == 1:
-                    noms_colonnes.append(expand_item(row[0][i]))
+                    #noms_colonnes.append(expand_item(row[0][i]))
+                    noms_colonnes.append(row[0][i]) #pas besoin car aucune colonne à prendre en compte avec 2 noms possibles
             #print(noms_colonnes)
             #donne un liste contenant normalement [["date et heure (CET/CEST)", "date et heure CET", "date et heure CEST"]]
             ids_var_mesurees = []
             for c in noms_colonnes:
+                """
                 if isinstance(c, list):
                     cur.execute("INSERT INTO variable_mesuree (type_mesure) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s)));", (c[0], c[0]))
                     #print(f"insertion de la variable mesuree {c[0]} réussie ou déjà existante")
                     cur.execute("SELECT id_variable_mesuree FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s))", (c[0],))
                 else:
-                    cur.execute("INSERT INTO variable_mesuree (type_mesure) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s)));", (c, c))
-                    #print(f"insertion de la variable mesuree {c} ou déjà existante")
-                    cur.execute("SELECT id_variable_mesuree FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s))", (c,))
+                """
+                cur.execute("INSERT INTO variable_mesuree (type_mesure) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s)));", (c, c))
+                #print(f"insertion de la variable mesuree {c} ou déjà existante")
+                cur.execute("SELECT id_variable_mesuree FROM variable_mesuree WHERE TRIM(lower(type_mesure)) IS NOT DISTINCT FROM TRIM(lower(%s))", (c,))
                 
                 ids_var_mesurees.append(cur.fetchone()[0])
 
@@ -393,9 +396,9 @@ def integration_hobo(ficjson):
             cur.execute("""INSERT INTO source_donnees (extension, nom_source, chemin_source, date_import, date_recueil, commentaire, id_responsable, id_struct, type_source)
             SELECT %s, %s, %s, to_timestamp(%s, %s), to_timestamp(%s, %s), %s, %s, (SELECT s.id_structure FROM structure_fichier s JOIN instrument_mesure im ON lower(im.nom_outil) = lower(s.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)), %s
             WHERE NOT EXISTS (SELECT 1 FROM source_donnees WHERE lower(extension) = lower(%s) AND lower(nom_source) = lower(%s) AND lower(chemin_source) = lower(%s) AND date_import = to_timestamp(%s, %s) AND date_recueil = to_timestamp(%s, %s) AND lower(commentaire) = lower(%s) AND id_responsable = %s AND id_struct = (SELECT sf.id_structure FROM structure_fichier sf JOIN instrument_mesure im ON lower(im.nom_outil) = lower(sf.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)) AND lower(type_source) = lower(%s));
-            """, (data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], data["type_source"], data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], data["type_source"]))
+            """, (data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], "fichier_mesure", data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], "fichier_mesure"))
 
-            cur.execute("SELECT id_source FROM source_donnees WHERE lower(extension) = lower(%s) AND lower(nom_source) = lower(%s) AND lower(chemin_source) = lower(%s) AND date_import = to_timestamp(%s, %s) AND date_recueil = to_timestamp(%s, %s) AND lower(commentaire) = lower(%s) AND id_responsable = %s AND id_struct = (SELECT s.id_structure FROM structure_fichier s JOIN instrument_mesure im ON lower(im.nom_outil) = lower(s.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)) AND lower(type_source) = lower(%s) LIMIT 1;", (data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], data["type_source"]))
+            cur.execute("SELECT id_source FROM source_donnees WHERE lower(extension) = lower(%s) AND lower(nom_source) = lower(%s) AND lower(chemin_source) = lower(%s) AND date_import = to_timestamp(%s, %s) AND date_recueil = to_timestamp(%s, %s) AND lower(commentaire) = lower(%s) AND id_responsable = %s AND id_struct = (SELECT s.id_structure FROM structure_fichier s JOIN instrument_mesure im ON lower(im.nom_outil) = lower(s.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)) AND lower(type_source) = lower(%s) LIMIT 1;", (data["extension"], nom_fic, nouveau_nom_fic, data["date_import"], format_timestamp(data["date_import"]), data["date_recueil"], format_timestamp(data["date_recueil"]), data["commentaire"], id_responsable_fic, data["num_instrument"], "fichier_mesure"))
             id_source_d = cur.fetchone()[0]
 
             #print("insertion sd d'id ", id_source_d)
