@@ -113,7 +113,13 @@ ngrok config add-authtoken <YOUR_AUTHTOKEN>
 ```bash
 ngrok http <port>
 ```
-L'application sera disponible à une adresse fournie par ngrok.
+
+- Lancer le serveur : 
+```bash
+npm run build
+npm run server
+```
+L'application sera ensuite disponible à une adresse fournie par ngrok.
 
 
 
