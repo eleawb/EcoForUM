@@ -258,18 +258,6 @@ app.post('/api/recherche', async (req, res) => {
             WHERE i.id_instrument = ANY($1::int[])
         ` //$1 : 1er paramètre (instrumentsIds)
         const structures = await client.query(structureQuery, [idsNumbers])
-
-        //on récupère les unites de mesure de chaque colonnes
-        const enteteQuery = `SELECT DISTINCT vm.unite_mesure, c.num_colonne
-            FROM variable_mesuree vm
-            JOIN serie_temporelle st ON st.id_variable_mesuree = vm.id_variable_mesuree
-            JOIN capteur_localise cl ON cl.id_capteur_gen = st.id_capteur_gen
-            JOIN capteur c ON c.id_capteur = cl.id_capteur_gen
-            JOIN instrument_mesure i ON i.id_instrument = c.id_instrument
-            WHERE i.id_instrument = ANY($1::int[])
-            ORDER BY c.num_colonne ASC;`
-        let rslt = await client.query(enteteQuery, [idsNumbers])
-        rslt = rslt.rows
         
         //ensuite on récupère toutes les mesures + filtre de dates
         let query = `
@@ -455,14 +443,21 @@ app.post('/api/recherche', async (req, res) => {
         
         //s'il y a des entêtes, on récupère les noms
         const instrumentColonnes = new Map()
-        let entetes = 0
         for (const struct of structures.rows) {
             let nomsColonnes = []
             if (struct.nom_colonnes) {
-                const toutesLesColonnes = struct.nom_colonnes.split(';').map(col => col.trim())
+                const toutesLesColonnes = struct.nom_colonnes.split(';')
                 const colonnesATraiter = struct.colonnes_a_traiter ? struct.colonnes_a_traiter.split(';').map(c => c.trim()) : []
                 
-                
+                //on récupère les unites de mesure de chaque colonnes
+                const enteteQuery = `SELECT DISTINCT unite_mesure, type_mesure
+                    FROM variable_mesuree
+                    WHERE type_mesure IN ('${toutesLesColonnes.join("', '")}')`
+                console.log(toutesLesColonnes)
+                let rslt = await client.query(enteteQuery)
+                rslt = rslt.rows
+                let entetes = 0
+                console.log(enteteQuery+ rslt)
                 for (let i = 0; i < toutesLesColonnes.length; i++) {
                     let colName = toutesLesColonnes[i]
                     
@@ -475,13 +470,12 @@ app.post('/api/recherche', async (req, res) => {
                     const estDateOuHeure = colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')
                     
                     if (estATraiter) {
-                        if (estATraiter) {
-                            if (colName.indexOf(rslt[entetes].unite_mesure)<0){
-                                colName += ` ${rslt[entetes].unite_mesure}`
-                            }
-                            nomsColonnes.push(colName)
-                            entetes++
+                        //Relier l'unité à l'entête
+                        if (entetes < rslt.length && colName.indexOf(rslt[entetes].unite_mesure) < 0){
+                            colName = colName.trim() + ` ${rslt[entetes].unite_mesure}`
                         }
+                        nomsColonnes.push(colName)
+                        entetes++
                     }
                     if (estDateOuHeure) {
                         nomsColonnes.push(colName)
