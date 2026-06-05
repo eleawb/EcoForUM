@@ -32,12 +32,34 @@ pour lancer le client et le serveur en simultané : lancer "npm run dev:all"
 Carte des zones du campus avec instruments de mesure :
 https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0
 
-## Créer la base de données
+## Création de la base de données en utilisant PostgreSQL comme SGBD
 
+### Installation et Configuration de PostgreSQL
+
+- Installez postgre depuis le site officiel : https://www.postgresql.org/download/
+
+- Configurez postgre en créant un mot de passe
+
+### Création de la base et des tables depuis pgAdmin4
+
+- Création et nommage de la base de données :  
+` Servers > PostgreSQL 18 > Databases ` puis ` clic droit > Create > Database ` puis remplir le champ ` Database ` avec le nom que vous voulez donner à la base puis ` Save
+`
+
+- Création des tables : ouvrir et lancer le fichier `Script_creation_tables.sql` présent dans le dossier ` Base_de_donnees `
+
+- Pour permettre la connexion des scripts à la base de données, il faut créer un fichier `.env` dans le dossier ` Base_de_donnees `. Ci-dessous un exemple du contenu du fichier dans lequel il faudra remplacer les informations par celles de votre base.
+` DB_HOST `, `DB_PORT` et `DB_USER` sont retrouvables en faisant `clic droit sur PostgreSQL 18 > Connection`.
+`DB_HOST` correspond au champ `Host name`, `DB_PORT` au champ `Port` et `DB_USER` au champ `Username`.
+
+<!--
 - Créez une base avec le nom et le mdp de votre choix
 - Lancez le script de création de base présent dans `"./Base_de_donnees/Script_creation_tables.sql"`
 - Créez un fichier .env dans le dossier Base_de_donnees 
+
 Ceci n'est qu'un exemple, remplacez ces informations par celles de votre base de données.
+-->
+
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
@@ -72,11 +94,28 @@ __S'il y a des problèmes avec une dépendance :__
 ```
 npm install 'dependance'
 ```
-__Lancer l'application :__ 
+__Lancer l'application avec vite (en local) :__ 
 ```bash
 npm run dev:all
 ```
-Le serveur se lancera à l'adresse "http://localhost:5173/".
+L'application sera disponible à l'adresse "http://localhost:5173/".
+
+__Lancer l'application avec ngrok (en mode distant)__ :
+
+- Installer ngrok : se créer un compte sur le site `https://ngrok.com/` puis installer en fonction du système d'exploitation de votre machine.
+
+- Configurer ngrok en ajoutant le token d'authentification retrouvable dans l'onglet `Setup & Installation` de votre compte :  
+```bash
+ngrok config add-authtoken <YOUR_AUTHTOKEN>
+```
+
+- Lancer ngrok : 
+```bash
+ngrok http <port>
+```
+L'application sera disponible à une adresse fournie par ngrok.
+
+
 
 ## Requis pour lancer les scripts sans l'application
 
