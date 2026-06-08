@@ -54,19 +54,34 @@ Vérifiez que vous êtes bien sur la bonne branche avec `git status`. Autrement,
 
 * Rendez vous sur le [site officiel de PostgreSQL](https://www.postgresql.org/download/) : https://www.postgresql.org/download/
 
+![PGAdmin Page officielle](images_readme/4-PGA_DL_Page.png)
+
 * Choisissez l'onglet correspondant à votre système d'exploitation.
     - Pour les utilisateurs de Linux, l'installation dépend de votre architecture, et se fera en ligne de commande.
-    - Pour les utilisateurs de Windows et MacOS, cliquez sur le lien "Download the installer" comme indiqué sur l'image ci-dessous. Après quoi, vous serez redirigés vers une page edb. Ici, téléchargez la version de PostgreSQL correspondant à votre système d'exploitation. **Le minimum requis est la version 18.4** avec laquelle a été développé le projet.
+    - Pour les utilisateurs de Windows et MacOS, cliquez sur le lien "Download the installer" comme indiqué sur l'image ci-dessous.   
+    ![PGAdmin Download the installer](images_readme/5-PGA_DL_Installer.png)  
+    Après quoi, vous serez redirigés vers une page edb. Ici, téléchargez la version de PostgreSQL correspondant à votre système d'exploitation. **Le minimum requis est la version 18.4** avec laquelle a été développé le projet.  
+    ![PGAdmin Page de téléchargement de l'exécutable](images_readme/6-PGA_Redirect.png)
 
 * Lancez l'exécutable pour commencer l'installation.
-    1. Après avoir autorisé l'ouverture, vous devriez tomber sur l'assistant d'installation de pgAdmin4.
-    2. Choisissez le chemin d'installation du logiciel (ou laissez-le par défaut).
-    3. Sur le menu des options, prenez soin à ce que tout soit coché comme ci-dessous, **surtout pgAdmin4**.
-    4. Choisissez le chemin de sauvegarde de vos données pour le logiciel (ou laissez-le par défaut).
-    5. Choisissez un mot de passe pour utiliser le logiciel (inutile d'en faire un trop compliqué : celui-ci restera en local). Comme toujours, n'utilisez pas un mot de passe que vous utilisez ailleurs !
-    6. Choisissez le port sur lequel votre serveur sera accessible (ou laissez-le par défaut).
-    7. Choisissez la localisation du nouveau cluster de base de données (celle par défaut fonctionne très bien aussi).
-    8. Vous devriez ensuite avoir respectivement : le résumé de l'installation, un message annonçant que le logiciel est prêt à être installé, puis le démarrage de l'installation. Cette opération peut prendre un certain temps (un thème qui risque d'être récurrent pour la suite).
+    1. Après avoir autorisé l'ouverture, vous devriez tomber sur l'assistant d'installation de pgAdmin4.  
+    ![PGAdmin Assistant d'installation](images_readme/7-PGA_exec.png)
+    2. Choisissez le chemin d'installation du logiciel (ou laissez-le par défaut).  
+    ![PGAdmin Chemin d'installation du logiciel](images_readme/8-PGA_chemin.png)
+    3. Sur le menu des options, prenez soin à ce que tout soit coché comme ci-dessous, **surtout pgAdmin4**.  
+    ![PGAdmin Options toutes cochées](images_readme/9-PGA_options.png)
+    4. Choisissez le chemin de sauvegarde de vos données pour le logiciel (ou laissez-le par défaut).  
+    ![PGAdmin Chemin d'installation des données](images_readme/10-PGA_chemin2.png)
+    5. Choisissez un mot de passe pour utiliser le logiciel (inutile d'en faire un trop compliqué : celui-ci restera en local). Comme toujours, n'utilisez pas un mot de passe que vous utilisez ailleurs !  
+    ![PGAdmin mot de passe](images_readme/11-PGA_mdp.png)
+    6. Choisissez le port sur lequel votre serveur sera accessible (ou laissez-le par défaut).  
+    ![PGAdmin port](images_readme/12-PGA_port.png)
+    7. Choisissez la localisation du nouveau cluster de base de données (celle par défaut fonctionne très bien aussi).  
+    ![PGAdmin cluster](images_readme/13-PGA_cluster.png)
+    8. Vous devriez ensuite avoir respectivement : le résumé de l'installation, un message annonçant que le logiciel est prêt à être installé, puis le démarrage de l'installation. **Cette opération peut prendre un certain temps** (un thème qui risque d'être récurrent pour la suite).  
+    ![PGAdmin Résumé d'installation](images_readme/14-PGA_summary.png)  
+    ![PGAdmin Message de prêt à l'installation](images_readme/15-PGA_pret_install.png)  
+    ![PGAdmin Début de l'installation](images_readme/16-PGA_installation_longue.png)  
 
 
     
