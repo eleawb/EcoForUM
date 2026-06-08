@@ -32,6 +32,14 @@ pour lancer le client et le serveur en simultané : lancer "npm run dev:all"
 Carte des zones du campus avec instruments de mesure :
 https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0
 
+## Téléchargement du Projet via gitlab
+
+1. Commencez par basculer sur la branche "Stage". Pour cela, cliquez sur main, puis stage, comme indiqué par les encadrés rouges ci-dessous.
+![Clic sur main](images_readme/0-Main_base.png)
+![Clic sur Stage](images_readme/1-Bascule_stage.png)
+
+2. 
+
 ## Création de la base de données en utilisant PostgreSQL comme SGBD
 
 ### Installation et Configuration de PostgreSQL
