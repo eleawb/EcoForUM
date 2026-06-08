@@ -168,20 +168,28 @@ __Structure type d'un JSON d'intégration de métadonnées :__
 # Et (Projet => Personne)
 * "type_script" : ["", ...],
 # Dans le même ordre que les scripts
-* "fichier_donnees" : ["nom_de_fichier_contenant_les_metadonnees", ...]
+* "fichier_donnees" : ["nom_de_fichier_contenant_les_metadonnees", ...],
+"date_import" : "YYYY-MM-DD HH:MM:SS",
+"commentaire" : "...",
+
+* "mail_responsable" : "nom@example.com",
+* "est_responsable_fichier" : false,
+# A ajouter si la personne n'est pas déjà un responsable
+"nom" : "nom",
+"prenom" : "prenom",
+"fonction" : "...",
+"encadre_par" : "nom2@example.com"
 ```
 
 __Structure type d'un JSON d'intégration de fichier de mesure :__ 
 ```json
 * "script" : "integration",
 * "chemin_source" : "chemin_du_fichier_dont_on_veut_integrer_les_donnees",
-* "type_source" : "fichier",
 * "nom_outil" : "nom_de_l'instrument_de_mesure",
 * "num_instrument" : "numero_defini_par_Marine_Zwicke",
-"num_serie" : "numero_present_dans_le_nom_du_fichier",
 # Exemple 'csv', 'xlsx'
 "extension" : "...",
-"date_recueil" : "YYYY-MM-DD HH:MM:SS",
+"date_collecte" : "YYYY-MM-DD HH:MM:SS",
 "date_import" : "YYYY-MM-DD HH:MM:SS",
 "commentaire" : "...",
 
