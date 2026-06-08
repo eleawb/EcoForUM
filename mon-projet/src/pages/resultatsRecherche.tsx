@@ -210,17 +210,29 @@ function ResultatsRecherche() {
                                     />
                                     {/*choix des colonnes*/}
                                     {colonnes.map((col) => (
-                                        <FormControlLabel
-                                            key={col}
-                                            control={
-                                                <Checkbox
-                                                    checked={colonnesSelectionnees.has(col)}
-                                                    onChange={() => ColonneChange(col)}
-                                                    size="small"
-                                                />
-                                            }
-                                            label={col}
-                                        />
+                                        (col!="Coefficient correcteur")?
+                                            (<FormControlLabel
+                                                key={col}
+                                                control={
+                                                    <Checkbox
+                                                        checked={colonnesSelectionnees.has(col)}
+                                                        onChange={() => ColonneChange(col)}
+                                                        size="small"
+                                                    />
+                                                }
+                                                label={col}
+                                            />):
+                                            (<FormControlLabel
+                                                key={col}
+                                                control={
+                                                    <Checkbox
+                                                        checked={colonnesSelectionnees.has(col)}
+                                                        onChange={() => ColonneChange(col)}
+                                                        size="small"
+                                                    />
+                                                }
+                                                label={"Correction des mesures?"}
+                                            />)
                                     ))}
                                 </Stack>
                             </Paper>
