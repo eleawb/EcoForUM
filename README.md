@@ -45,13 +45,36 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 * **Si vous ne voulez pas modifier les fichiers sources par la suite** (accès simple), téléchargez le .zip, comme indiqué sur l'image en dessous.  
 ![Téléchargement du .zip](images_readme/3a-Zip.png)
 * **Si vous souhaitez modifier les fichiers sources par la suite** (accès développeur), choisissez votre mode préféré entre https et ssh. Puis, dans un terminal, cloner le dépôt avec `git clone <lien copié>` et suivez la procédure habituelle.  
-![Choix https ou ssh](images_readme/3b-ssh-https.png)
+![Choix https ou ssh](images_readme/3b-ssh-https.png)  
+Vérifiez que vous êtes bien sur la bonne branche avec `git status`. Autrement, faites `git checkout -b Stage`.  
 
 ## Création de la base de données en utilisant PostgreSQL comme SGBD
 
-### Installation et Configuration de PostgreSQL
+### Installation de PostgreSQL
 
-- Installez postgre depuis le site officiel : https://www.postgresql.org/download/
+* Rendez vous sur le [site officiel de PostgreSQL](https://www.postgresql.org/download/) : https://www.postgresql.org/download/
+
+* Choisissez l'onglet correspondant à votre système d'exploitation.
+    - Pour les utilisateurs de Linux, l'installation dépend de votre architecture, et se fera en ligne de commande.
+    - Pour les utilisateurs de Windows et MacOS, cliquez sur le lien "Download the installer" comme indiqué sur l'image ci-dessous. Après quoi, vous serez redirigés vers une page edb. Ici, téléchargez la version de PostgreSQL correspondant à votre système d'exploitation. **Le minimum requis est la version 18.4** avec laquelle a été développé le projet.
+
+* Lancez l'exécutable pour commencer l'installation.
+    1. Après avoir autorisé l'ouverture, vous devriez tomber sur l'assistant d'installation de pgAdmin4.
+    2. Choisissez le chemin d'installation du logiciel (ou laissez-le par défaut).
+    3. Sur le menu des options, prenez soin à ce que tout soit coché comme ci-dessous, **surtout pgAdmin4**.
+    4. Choisissez le chemin de sauvegarde de vos données pour le logiciel (ou laissez-le par défaut).
+    5. Choisissez un mot de passe pour utiliser le logiciel (inutile d'en faire un trop compliqué : celui-ci restera en local). Comme toujours, n'utilisez pas un mot de passe que vous utilisez ailleurs !
+    6. Choisissez le port sur lequel votre serveur sera accessible (ou laissez-le par défaut).
+    7. Choisissez la localisation du nouveau cluster de base de données (celle par défaut fonctionne très bien aussi).
+    8. Vous devriez ensuite avoir respectivement : le résumé de l'installation, un message annonçant que le logiciel est prêt à être installé, puis le démarrage de l'installation. Cette opération peut prendre un certain temps (un thème qui risque d'être récurrent pour la suite).
+
+
+    
+### Configuration de PostgreSQL
+
+#### pgAdmin est un logiciel dont la lenteur admirable fait partie de l'expérience. NE CLIQUEZ PAS DE PARTOUT.
+
+
 
 - Configurez postgre en créant un mot de passe
 
