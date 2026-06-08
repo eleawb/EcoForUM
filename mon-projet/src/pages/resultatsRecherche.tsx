@@ -27,21 +27,26 @@ function ResultatsRecherche() {
     const navigate = useNavigate()
 
     const location = useLocation()
-    const [previewResultats, setPreviewResultats] = useState<any[]>([]) //récupérer les 20 résultats pour la preview
+    const [previewResultats, setPreviewResultats] = useState<any[]>([]) //récupérer les 20 premiers résultats pour la preview
+    const [previewResultatsCorr, setpreviewResultatsCorr] = useState<any[]>([]) //récupérer les 20 premiers résultats corrigés pour la preview
     const [resultats, setResultats] = useState<any[]>([]) //récupérer tous les résultats
+    const [resultatsCorr, setResultatsCorr] = useState<any[]>([]) //récupérer tous les résultats corrigés
     const [loading, setLoading] = useState(true) //boucle de chargement le temps de l'affichage
     
     const [colonnes, setColonnes] = useState<any[]>([]) //récupérer les colonnes
     const [colonnesSelectionnees, setColonnesSelectionnees] = useState<Set<string>>(new Set()) //récupérer le choix des colonnes que l'user souhaite garder
+    const [correction, setCorrection] = useState(true) //boucle de chargement le temps de l'affichage
 
     useEffect(() => {
         //récupérer les résultats passés par la navigation
         if (location.state) {
             setPreviewResultats(location.state.previewResultats || []) //si pas de previewResultats, mise à []
+            setpreviewResultatsCorr(location.state.previewResultatsCorr || []) //idem pour previewResultatsCorr
             setResultats(location.state.resultats||[]) //idem pour resultats
+            setResultatsCorr(location.state.resultatsCorr||[])//idem pour resultatsCorr
 
             //debugs
-            console.log("Résultats reçus:", location.state.previewResultats?.length||0, "affichés en preview sur les", location.state.resultats?.length||0, "totaux") //si résultats undefined, ça bug donc mettre à 0
+            console.log("Résultats reçus:", location.state.previewResultatsCorr?.length||0, "affichés en preview sur les", location.state.resultatsCorr?.length||0, "totaux") //si résultats undefined, ça bug donc mettre à 0
             console.log("Entêtes des colonnes :", location.state.entetes)
         
             //récupérer les entêtes sans doublons depuis le backend
@@ -74,10 +79,13 @@ function ResultatsRecherche() {
                 } else {
                     newSelection.add(colonne)
                 }
+                if(colonne === "Coefficient correcteur"){
+                    setCorrection(!correction)
+                }
                 return newSelection
             })
         }
-        
+
 
     
         // sélection/désélection de toutes les colonnes
@@ -91,14 +99,18 @@ function ResultatsRecherche() {
 
     // fonction pour exporter en CSV
     const telechargerCSV = () => {
-        if (resultats.length === 0) return
+        let mesures= resultats
+        if(correction){
+            mesures = resultatsCorr
+        }
+        if (mesures.length === 0) return
 
 
         const colonnesAAfficher = colonnes.filter(col => colonnesSelectionnees.has(col))
         const csvRows = [colonnesAAfficher]
 
         //ajouter les données
-        for (const row of resultats) {
+        for (const row of mesures) {
             const ligne = colonnesAAfficher.map(col => {
                 let valeur = row[col] || ''
                 //si la valeur contient des '' ou ; on l'encapsule
@@ -116,7 +128,7 @@ function ResultatsRecherche() {
         const link = document.createElement('a')
         const url = URL.createObjectURL(blob)
         link.href = url
-        link.setAttribute('download', 'resultats_recherche.csv')
+        link.setAttribute('download', 'EcoForUM_data.csv')
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -191,7 +203,7 @@ function ResultatsRecherche() {
                                         }
                                         label={
                                             //bouton tout sélectionner pr aller plus vite
-                                            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
+                                            <Typography variant="caption" sx={{ color: '#666', fontSize: '0.80rem' }}>
                                               Tout sélectionner
                                             </Typography>
                                             }
@@ -228,7 +240,14 @@ function ResultatsRecherche() {
 
                                     {/*affichage des données de preview (que 20)*/}
                                     <TableBody>
-                                        {previewResultats.map((row, idx) => (
+                                        {correction?previewResultatsCorr.map((row, idx) => (
+                                            <TableRow key={idx} hover>
+                                                {colonnes.filter(col => colonnesSelectionnees.has(col)).map((col, colIdx) => (                                                    <TableCell key={`${idx}-${colIdx}`}>
+                                                        {row[col] || '-'} {/*si pas de données, on met -*/}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        )):previewResultats.map((row, idx) => (
                                             <TableRow key={idx} hover>
                                                 {colonnes.filter(col => colonnesSelectionnees.has(col)).map((col, colIdx) => (                                                    <TableCell key={`${idx}-${colIdx}`}>
                                                         {row[col] || '-'} {/*si pas de données, on met -*/}

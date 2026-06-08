@@ -559,6 +559,7 @@ app.post('/api/recherche', async (req, res) => {
        // construction des résultats
        const idsMesureVus = new Set() //Set pr éviter les doublons
         let tousLesResultats = []
+        let tousLesResultatsCorr = []
 
         for (const [id, instrument] of instrumentsMap) {
             if (instrument.mesures.length === 0) continue
@@ -569,8 +570,11 @@ app.post('/api/recherche', async (req, res) => {
                 idsMesureVus.add(row.id_mesure)
                 
                 const nouvelleLigne = {}
+                const nouvelleLigneCorr = {}
                 nouvelleLigne["Instrument"] = row.instrument
                 nouvelleLigne["Capteur"] = row.capteur
+                nouvelleLigneCorr["Instrument"] = row.instrument
+                nouvelleLigneCorr["Capteur"] = row.capteur
            
                //remplissage des colonnes avec les vrais noms
                 for (let i = 0; i < instrument.nomsColonnes.length; i++) {
@@ -580,14 +584,18 @@ app.post('/api/recherche', async (req, res) => {
                     if (colName !== "Instrument" && colName !== "Capteur" && 
                         !colName.toLowerCase().includes('date') && !colName.toLowerCase().includes('heure')) {
                         //valeur mesurée
-                        if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
-                            nouvelleLigne[colName] = row.valeur_mesure_corrigee
-                            //ajouter une indication que la valeur est corrigée
-                            nouvelleLigne[`${colName}_corrige`] = true
-                        } else if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
+                        if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
+                            if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
+                                nouvelleLigneCorr[colName] = row.valeur_mesure_corrigee
+                                //ajouter une indication que la valeur est corrigée
+                                //nouvelleLigne[`${colName}_corrige`] = true
+                            } else {
+                                nouvelleLigneCorr[colName] = row.valeur_mesure
+                            }
                             nouvelleLigne[colName] = row.valeur_mesure
                         } else {
                             nouvelleLigne[colName] = '-'
+                            nouvelleLigneCorr[colName] = '-'
                         }
                     }
                     //si c'est la colonne date/heure
@@ -595,9 +603,13 @@ app.post('/api/recherche', async (req, res) => {
                         nouvelleLigne[colName] = row.date_heure 
                             ? new Date(row.date_heure).toLocaleString('fr-FR')
                             : '-'
+                        nouvelleLigneCorr[colName] = row.date_heure 
+                            ? new Date(row.date_heure).toLocaleString('fr-FR')
+                            : '-'
                     }
                     else {
                         nouvelleLigne[colName] = '-'
+                        nouvelleLigneCorr[colName] = '-'
                     }
 
                 }
@@ -605,9 +617,9 @@ app.post('/api/recherche', async (req, res) => {
                 //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
                 if (afficherColonneCoeff) {
                     if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
-                        nouvelleLigne["Coefficient correcteur"] = `${row.coefficient_applique}`
+                        nouvelleLigneCorr["Coefficient correcteur"] = `${row.coefficient_applique}`
                     } else {
-                        nouvelleLigne["Coefficient correcteur"] = "-"
+                        nouvelleLigneCorr["Coefficient correcteur"] = "-"
                     }
                 }
 
@@ -615,18 +627,25 @@ app.post('/api/recherche', async (req, res) => {
                 //afficher colonne maintenance 
                 if (afficherColonneMaintenance){
                     nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
+                    nouvelleLigneCorr["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
                 }
                 
                tousLesResultats.push(nouvelleLigne)
+               tousLesResultatsCorr.push(nouvelleLigneCorr)
+               //console.log(tousLesResultatsCorr)
            }
        }
        
        const previewResultats = tousLesResultats.slice(0, 20)
+       const previewResultatsCorr = tousLesResultatsCorr.slice(0, 20)
+       //console.log(tousLesResultatsCorr)
        
        //envoi des résultats 
        res.json({
            resultats: tousLesResultats,
+           resultatsCorr: tousLesResultatsCorr,
            previewResultats: previewResultats,
+           previewResultatsCorr: previewResultatsCorr,
            entetes: entetesGlobales
        })
        
