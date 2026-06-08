@@ -82,6 +82,10 @@ Vérifiez que vous êtes bien sur la bonne branche avec `git status`. Autrement,
     ![PGAdmin Résumé d'installation](images_readme/14-PGA_summary.png)  
     ![PGAdmin Message de prêt à l'installation](images_readme/15-PGA_pret_install.png)  
     ![PGAdmin Début de l'installation](images_readme/16-PGA_installation_longue.png)  
+    9. Après l'installation, il faut **absolument décocher** le lancement de Stack Builder.  
+    ![PGAdmin Ne pas lancer Stack Builder](images_readme/17-PGA_NO.png)
+
+Vous pouvez maintenant passer à la configuration de PostgreSQL.
 
 
     
