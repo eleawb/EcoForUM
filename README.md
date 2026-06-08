@@ -38,13 +38,13 @@ https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.86349615830301
 ![Clic sur main](images_readme/0-Main_base.png)
 ![Clic sur Stage](images_readme/1-Bascule_stage.png)
 
-2. Si vous êtes bien sur la bonne branche, vous devriez voir "Stage" en haut, comme souligné en vert. Cliquez ensuite sur le menu déroulant de "Code" en bleu, comme encadré en rouge.
+2. Si vous êtes bien sur la bonne branche, vous devriez voir "Stage" en haut, comme souligné en vert. Cliquez ensuite sur le menu déroulant de "Code" en bleu, comme encadré en rouge.  
 ![Branche stage - Ouvre le menu code](images_readme/2-Code_ouvrir.png)
 
 3. À partir de là, vous avez plusieurs options pour "cloner" le projet.
-* **Si vous ne voulez pas modifier les fichiers sources par la suite** (accès simple), téléchargez le .zip, comme indiqué sur l'image en dessous.
+* **Si vous ne voulez pas modifier les fichiers sources par la suite** (accès simple), téléchargez le .zip, comme indiqué sur l'image en dessous.  
 ![Téléchargement du .zip](images_readme/3a-Zip.png)
-* **Si vous souhaitez modifier les fichiers sources par la suite** (accès développeur), choisissez votre mode préféré entre https et ssh. Puis, dans un terminal, cloner le dépôt avec `git clone <lien copié>` et suivez la procédure habitelle.
+* **Si vous souhaitez modifier les fichiers sources par la suite** (accès développeur), choisissez votre mode préféré entre https et ssh. Puis, dans un terminal, cloner le dépôt avec `git clone <lien copié>` et suivez la procédure habituelle.  
 ![Choix https ou ssh](images_readme/3b-ssh-https.png)
 
 ## Création de la base de données en utilisant PostgreSQL comme SGBD
