@@ -92,18 +92,32 @@ Vous pouvez maintenant passer à la configuration de PostgreSQL.
 ### Configuration de PostgreSQL
 
 #### pgAdmin est un logiciel dont la lenteur admirable fait partie de l'expérience. NE CLIQUEZ PAS DE PARTOUT.
+*Pour des raisons de lisibilité, nous ne préciserons donc pas que chaque opération faite dans pgAdmin4 peut prendre **un certain temps**.*
 
-
-
-- Configurez postgre en créant un mot de passe
+* Lancez pgAdmin4
+* Entrez le mot de passe que vous avez créé lors de l'installation du logiciel.  
+![PGAdmin lancement mdp](images_readme/18-PGA_launch.png)
 
 ### Création de la base et des tables depuis pgAdmin4
 
-- Création et nommage de la base de données :  
-` Servers > PostgreSQL 18 > Databases ` puis ` clic droit > Create > Database ` puis remplir le champ ` Database ` avec le nom que vous voulez donner à la base puis ` Save
-`
+#### pgAdmin est un logiciel dont la lenteur admirable fait partie de l'expérience. NE CLIQUEZ PAS DE PARTOUT.
+*Pour des raisons de lisibilité, nous ne préciserons donc pas que chaque opération faite dans pgAdmin4 peut prendre **un certain temps**.*
 
-- Création des tables : ouvrir et lancer le fichier `Script_creation_tables.sql` présent dans le dossier ` Base_de_donnees `
+**Création et nommage de la base de données**  
+- Dans l'onglet à gauche, développez `Servers`,`PostgreSQL 18` puis `Databases`. Faites un clic droit sur `Databases` pour accéder aux sous-menus `Create` puis `Database`. Cliquez sur `Database`.  
+![PGAdmin menu pour créer une db](images_readme/19-Creation_db.png)
+- Une fenêtre de dialogue s'ouvre. Remplissez le champ `Database` avec le nom que vous voulez donner à la base, puis cliquez sur `Save`. Dans l'exemple ci-dessous, notre `Database` est appelée ECOFORUM.
+![PGAdmin dialogue pour nommer db](images_readme/20-Creation_db_2.png)  
+
+**Création des tables** 
+- Faire un clic droit sur votre `Database` créée à l'étape précédente, pour ouvrir le `Query Tool`.  
+![PGAdmin Query tool](images_readme/21-Query_tool.png)  
+- Depuis le Query Tool, ouvrir, dans le dossier du projet, `Base_de_donnees > Script_creation_tables.sql`.  
+![PGAdmin script opening](images_readme/22-Creation_tables.png)
+- Lancez le script en appuyant sur la flèche ( ► ). Si tout se passe bien, vous devriez voir de popups verts apparaître en bas de votre fenêtre.  
+![PGAdmin script bon](images_readme/23-Good_job.png)
+
+### Connexion des scripts à la base de données
 
 - Pour permettre la connexion des scripts à la base de données, il faut créer un fichier `.env` dans le dossier ` Base_de_donnees `. Ci-dessous un exemple du contenu du fichier dans lequel il faudra remplacer les informations par celles de votre base.
 ` DB_HOST `, `DB_PORT` et `DB_USER` sont retrouvables en faisant `clic droit sur PostgreSQL 18 > Connection`.
