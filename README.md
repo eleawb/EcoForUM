@@ -119,9 +119,35 @@ Vous pouvez maintenant passer à la configuration de PostgreSQL.
 
 ### Connexion des scripts à la base de données
 
-- Pour permettre la connexion des scripts à la base de données, il faut créer un fichier `.env` dans le dossier ` Base_de_donnees `. Ci-dessous un exemple du contenu du fichier dans lequel il faudra remplacer les informations par celles de votre base.
-` DB_HOST `, `DB_PORT` et `DB_USER` sont retrouvables en faisant `clic droit sur PostgreSQL 18 > Connection`.
-`DB_HOST` correspond au champ `Host name`, `DB_PORT` au champ `Port` et `DB_USER` au champ `Username`.
+* Dans le dossier `Base_de_donnees`, créer un fichier `.env`. Pour cela, il y a plusieurs manières de faire :
+    - Sur Windows ou MacOS, vous pouvez créer un fichier .env vide depuis une interface de développement, ou notes, puis vérifier qu'il n'y a pas d'extension.
+    - Sur Linux, ouvrez un terminal, placez-vous dans le dossier, et faites la commande `touch .env`  
+
+* Pour ouvrir le fichier depuis l'explorateur de fichiers :
+    - Sur Windows ou Linux, vous devrez activer l'affichage de fichiers cachés.  
+    ![Fichiers cachés plus trop cachés Windows](images_readme/24-Cache.png)
+    ![Fichiers cachés plus trop cachés Linux](images_readme/25-Cache_Ubuntu.png)
+    - Sur MacOS, vous trouverez des ressources en ligne pour vous guider. Nous n'avons pas le matériel pour vous faire une démonstration.  
+
+* Remplissez le fichier `.env` avec le texte suivant :  
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=<nom_base>
+DB_USER=postgres
+DB_PASSWORD=<mdp>
+```
+
+* Remplacez les informations du texte ci-dessus avec celle de votre base de données.
+    - `DB_HOST`, `DB_PORT` et `DB_USER` sont retrouvables sur pgAdmin.  
+    Pour cela, faites un clic droit sur `PostgreSQL 18` et allez sur `Properties`  
+    ![PGAdmin propriétés](images_readme/26-PGA_properties.png)  
+    Une boîte de dialogue s'ouvrira. Cliquez sur l'onglet `Connection`.  
+    ![PGAdmin boîte de dialogue](images_readme/27-PGA_Dialog.png)  
+    Vous trouverez les différentes informations comme soulignées en vert ci-dessous.  
+    ![PGAdmin informations de connexion](images_readme/28-PGA_Infos.png)  
+    - Remplacez `<nom_base>` par le nom de votre base choisi lors de la création de celle-ci.
+    - Remplacez `<mdp>` par le mot de passe que vous utilisez pour ouvrir pgAdmin4.
 
 <!--
 - Créez une base avec le nom et le mdp de votre choix
@@ -131,15 +157,9 @@ Vous pouvez maintenant passer à la configuration de PostgreSQL.
 Ceci n'est qu'un exemple, remplacez ces informations par celles de votre base de données.
 -->
 
-```bash
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=nom_base
-DB_USER=postgres
-DB_PASSWORD=mdp
-```
 
-Le .env est ajouté dans .gitignore pour ne pas que le fichier soit push dans le gitlab (sécurité).
+
+Le .env est dans le .gitignore pour ne pas que le fichier soit ajouté au gitlab (sécurité).
 
 ## Requis pour lancer l'application (sans dockerisation)
 
