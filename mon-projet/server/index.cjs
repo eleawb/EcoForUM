@@ -271,6 +271,7 @@ app.post('/api/recherche', async (req, res) => {
                 i.num_instrument,
                 cg.description as capteur,
                 c.id_capteur,
+                c.num_colonne,
                 m.date_heure
             FROM mesure m
             JOIN serie_temporelle st ON st.id_st = m.id_st
@@ -444,7 +445,7 @@ app.post('/api/recherche', async (req, res) => {
         //s'il y a des entêtes, on récupère les noms
         const instrumentColonnes = new Map()
         for (const struct of structures.rows) {
-            let nomsColonnes = []
+            let nomsColonnes = {}
             if (struct.nom_colonnes) {
                 const toutesLesColonnes = struct.nom_colonnes.split(';')
                 const colonnesATraiter = struct.colonnes_a_traiter ? struct.colonnes_a_traiter.split(';').map(c => c.trim()) : []
@@ -474,16 +475,16 @@ app.post('/api/recherche', async (req, res) => {
                         if (entetes < rslt.length && colName.indexOf(rslt[entetes].unite_mesure) < 0){
                             colName = colName.trim() + ` ${rslt[entetes].unite_mesure}`
                         }
-                        nomsColonnes.push(colName)
+                        nomsColonnes[i+1] = colName
                         entetes++
                     }
                     if (estDateOuHeure) {
-                        nomsColonnes.push(colName)
+                        nomsColonnes[i+1] = colName
                     }
                 }
             } else {
                 for (let i = 1; i <= struct.nb_colonnes; i++) {
-                    nomsColonnes.push(`colonne_${i}`)
+                    nomsColonnes[i+1] = `colonne_${i}`
                 }
             }
             instrumentColonnes.set(struct.id_instrument, {
@@ -533,9 +534,9 @@ app.post('/api/recherche', async (req, res) => {
        uniqueColonnes.set('Capteur', true)
 
        for (const [id, instrument] of instrumentsMap) {
-           for (const colName of instrument.nomsColonnes) {
-               if (!uniqueColonnes.has(colName)) {
-                   uniqueColonnes.set(colName, true)
+           for (var colNum in instrument.nomsColonnes) {
+               if (!uniqueColonnes.has(instrument.nomsColonnes[colNum])) {
+                   uniqueColonnes.set(instrument.nomsColonnes[colNum], true)
                }
            }
        }
@@ -565,6 +566,8 @@ app.post('/api/recherche', async (req, res) => {
             if (instrument.mesures.length === 0) continue
             
             for (const row of instrument.mesures) {
+                //console.log(row)
+                //console.log(instrument.nomsColonnes)
                 //ignorer les doublons d'id_mesure
                 if (idsMesureVus.has(row.id_mesure)) continue
                 idsMesureVus.add(row.id_mesure)
@@ -575,14 +578,14 @@ app.post('/api/recherche', async (req, res) => {
                 nouvelleLigne["Capteur"] = row.capteur
                 nouvelleLigneCorr["Instrument"] = row.instrument
                 nouvelleLigneCorr["Capteur"] = row.capteur
+                    //console.log(instrument.nomsColonnes.keys)
            
                //remplissage des colonnes avec les vrais noms
-                for (let i = 0; i < instrument.nomsColonnes.length; i++) {
+                for (var i in instrument.nomsColonnes) {
                     const colName = instrument.nomsColonnes[i]
                     
                     //si c'est la colonne de donnée (la seule qui n'est pas Instrument, Capteur, Date)
-                    if (colName !== "Instrument" && colName !== "Capteur" && 
-                        !colName.toLowerCase().includes('date') && !colName.toLowerCase().includes('heure')) {
+                    if (i == row.num_colonne) {
                         //valeur mesurée
                         if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
                             if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
@@ -632,13 +635,12 @@ app.post('/api/recherche', async (req, res) => {
                 
                tousLesResultats.push(nouvelleLigne)
                tousLesResultatsCorr.push(nouvelleLigneCorr)
-               //console.log(tousLesResultatsCorr)
+               //console.log(tousLesResultats)
            }
        }
        
        const previewResultats = tousLesResultats.slice(0, 20)
        const previewResultatsCorr = tousLesResultatsCorr.slice(0, 20)
-       //console.log(tousLesResultatsCorr)
        
        //envoi des résultats 
        res.json({
