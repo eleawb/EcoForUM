@@ -106,7 +106,7 @@ Vous pouvez maintenant passer à la configuration de PostgreSQL.
 **Création et nommage de la base de données**  
 - Dans l'onglet à gauche, développez `Servers`,`PostgreSQL 18` puis `Databases`. Faites un clic droit sur `Databases` pour accéder aux sous-menus `Create` puis `Database`. Cliquez sur `Database`.  
 ![PGAdmin menu pour créer une db](images_readme/19-Creation_db.png)
-- Une fenêtre de dialogue s'ouvre. Remplissez le champ `Database` avec le nom que vous voulez donner à la base, puis cliquez sur `Save`. Dans l'exemple ci-dessous, notre `Database` est appelée ECOFORUM.
+- Une fenêtre de dialogue s'ouvre. Remplissez le champ `Database` avec le nom que vous voulez donner à la base, puis cliquez sur `Save`. Dans l'exemple ci-dessous, notre `Database` est appelée ECOFORUM.  
 ![PGAdmin dialogue pour nommer db](images_readme/20-Creation_db_2.png)  
 
 **Création des tables** 
