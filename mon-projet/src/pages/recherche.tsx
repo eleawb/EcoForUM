@@ -76,6 +76,9 @@ function Recherche() {
     // liste des années disponibles (par défaut de 2020 à année actuelle)
     const [anneesDisponibles, setAnneesDisponibles] = useState<string[]>([])
 
+    //Pour le boutton submit
+    const [clique, setClique] = useState(false)
+
 
     useEffect(() => {
         const fetchData = async () => { //on récupère les données de la bdd
@@ -328,6 +331,8 @@ const renderCategoryTree = (categorie: any, depth: number) => {
 
     //bouton final "rechercher"
     const boutonSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        setClique(true)
+
         e.preventDefault()
         
         //vérifier si minimum 1 instrument de sélectionné, quand même
@@ -461,10 +466,12 @@ const renderCategoryTree = (categorie: any, depth: number) => {
 
             //sinon erreurs
             }else {
+              setClique(false)
               alert('Erreur lors de la recherche')
             } 
 
           } catch (error) {
+            setClique(false)
             console.error('Erreur lors de la recherche:', error)
             alert('Erreur lors de la recherche')
         }
@@ -1536,6 +1543,7 @@ const renderPeriodeInput = (periode: {id: string, type: string, valeur: string})
                               type="submit"
                               variant="contained"
                               startIcon={<SearchIcon />}
+                              loading={clique}
                               sx={{
                                   bgcolor: '#0370B2',
                                   '&:hover': { bgcolor: '#00517C' },
@@ -1544,7 +1552,7 @@ const renderPeriodeInput = (periode: {id: string, type: string, valeur: string})
                               }}
                               >
                               Rechercher
-                            </Button>   
+                              </Button> 
                           </Stack>
                           </Stack>
                     </form>
