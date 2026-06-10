@@ -73,7 +73,7 @@ def insert_responsable(nom, prenom, adresse_mail, fonction, mail_encadrant):
     # Renvoie l'id du responsable à la fin
     return id_responsable[0]
 
-def insert_source_donnees(extension, nom_source, chemin_source, date_import, date_recueil, commentaire, id_responsable, nom_instru):
+def insert_source_donnees(extension, nom_source, chemin_source, date_import, date_collecte, commentaire, id_responsable, nom_instru):
     # Recherche de l'id de la structure
     cur.execute("""
         SELECT id_structure FROM structure_fichier WHERE lower(nom_instrument) = lower(%s);
@@ -85,12 +85,12 @@ def insert_source_donnees(extension, nom_source, chemin_source, date_import, dat
         # Ajoute la source de données dans la base
         cur.execute("""
             INSERT INTO source_donnees 
-                (extension, nom_source, chemin_source, date_import, date_recueil, commentaire, type_source, id_responsable, id_struct)
+                (extension, nom_source, chemin_source, date_import, date_collecte, commentaire, type_source, id_responsable, id_struct)
                 VALUES
                 (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_source
             """,
-            (extension, nom_source, chemin_source, date_import, date_recueil, commentaire, "fichier_mesure", id_responsable, id_struct))
+            (extension, nom_source, chemin_source, date_import, date_collecte, commentaire, "fichier_mesure", id_responsable, id_struct))
         # Va chercher l'id de cette nouvelle source et le renvoie
         id_source = cur.fetchone()
         id_source = id_source[0]
@@ -294,12 +294,12 @@ if __name__ == "__main__":
         # Reprend l'extension du JSON au cas où le fichier n'en ait pas
         """nom_nouv_fichier = Path(nouv_fichier_mesure).stem
         insert_source_donnees(dico_json["extension"], nom_nouv_fichier, nouv_fichier_mesure,\
-                dico_json["date_import"], dico_json["date_recueil"], dico_json["commentaire"],\
+                dico_json["date_import"], dico_json["date_collecte"], dico_json["commentaire"],\
                 id_responsable, dico_json["nom_outil"])
         """
         nom_fichier = Path(fichier_mesure).stem
         id_source_donnees = insert_source_donnees(dico_json["extension"], nom_fichier, fichier_mesure,\
-                dico_json["date_import"], dico_json["date_recueil"], dico_json["commentaire"],\
+                dico_json["date_import"], dico_json["date_collecte"], dico_json["commentaire"],\
                 id_responsable, dico_json["nom_outil"])
 
         # Recherche de la structure à suivre

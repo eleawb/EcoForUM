@@ -44,10 +44,10 @@ with open(arg, encoding="utf-8") as f:
 
                     if resRegex:
                         params = metadonnees["chemin_source"].split("_")
-                        print(json.dumps({"reussite":True, "commentaire":"Le regex a marche et le fichier est valide", "numero_serie":params[-5], "extension":"csv", "date_recueil":params[-4]+params[-3]+params[-2], "type_source":"fichier_mesure"}))
+                        print(json.dumps({"reussite":True, "commentaire":"Le regex a marche et le fichier est valide", "numero_serie":params[-5], "extension":"csv", "date_collecte":params[-4]+"-"+params[-3]+"-"+params[-2], "type_source":"fichier_mesure"}))
 
                     else:
-                        print(json.dumps({"reussite":True, "commentaire":"Le regex n'a pas marche mais le fichier est valide", "numero_serie":"", "extension":"", "date_recueil":"", "type_source":""}))
+                        print(json.dumps({"reussite":True, "commentaire":"Le regex n'a pas marche mais le fichier est valide", "numero_serie":"", "extension":"", "date_collecte":"", "type_source":""}))
 
                 else:
                     print(json.dumps({"reussite":False, "commentaire":"Il n'y a pas le bon nombre de colonnes"}))

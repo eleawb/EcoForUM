@@ -31,12 +31,13 @@ Definition des etats
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */ 
 
-  const [selectedInstrumentId, setSelectedInstrumentId] = useState<number | null>(null);//ID de l instrument
-  const [selectedInstrument, setSelectedInstrument] = useState<string>(''); // nom_outil
-  const [numInstrument, setNumInstrument] = useState<string>(''); //num_instrument
+  const [selectedNumInstrument, setSelectedNumInstrument] = useState<string>(''); //num_instrument
+  const [selectedNomInstrument, setSelectedNomInstrument] = useState<string>(''); // nom_outil
+  const [numInstrumentDisabled, setNumInstrumentDisabled] = useState(true);
   const [instruments, setInstrumentsDisponibles] = useState<any[]>([]); //liste dinstruments disponibles sur la BDD
+  const [nomsInstruments, setNomsInstruments] = useState<any[]>([]);
+  const [numsInstrumentsParNoms, setNumsInstrumentsParNoms] = useState<Record<string, string[]>>({});
   const [showAdditionalInputs, setShowAdditionalInputs] = useState<boolean>(false);
-  const [utilisateur, setUtilisateur] = useState<string>('');
   const [selectedResponsable,setSelectedResponsable] = useState<string>('');
   const [responsables, setResponsablesDisponibles] = useState<any[]>([]);
   const [isNewResponsable, setIsNewResponsable] = useState<boolean>(false);//Check si le responsable fichier fut cree pour cet ajout
@@ -44,15 +45,14 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   const [nom, setNom] = useState<string>('');
   const [prenom, setPrenom] = useState<string>('');
   const [mail, setMail] = useState<string>('');
-  const [numSerie, setNumSerie] = useState<string>('');
   const [extension, setExtension] = useState<string>('');
-  const [dateRecueil, setDateRecueil] = useState<string>('');
-  const [dateImport, setDateImport] = useState<string>('');
-  const [typeSource, setTypeSource] = useState<string>('');
+  //const [dateCollecteForm, setDateCollecteForm] = useState<string>('');
+  const [dateCollecteComplete, setDateCollecteComplete] = useState<string>('');
+  const [commentaire, setCommentaire] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cheminSelectedFile , setCheminSelectedFile] = useState<string>('');
 
-  const FirstFormComplete = selectedInstrument !== '' && numInstrument !== '';
-  const areAdditionalInputsComplete = utilisateur !== '';
+  const FirstFormComplete = selectedNomInstrument !== '' && selectedNumInstrument !== '';
 /*
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 FetchData
@@ -74,6 +74,31 @@ const fetchData = async () => {
                 console.log("Responsables reçus du backend:", respononsablesData)
                 setResponsablesDisponibles(respononsablesData || [])
 
+                const nomsI = Array.from(
+                  new Set(instrumentsData.map((i : { nom_outil: string }) => i.nom_outil))
+                  )
+                console.log("Noms des instruments récupérés :", nomsI)
+                setNomsInstruments(nomsI)
+
+                const instrumentsParNom = instrumentsData.reduce(
+                  (
+                    dico: Record<string, string[]>,
+                    instrument: any
+                  ) => {
+                    if (!dico[instrument.nom_outil]) {
+                      dico[instrument.nom_outil] = [];
+                    }
+                
+                    dico[instrument.nom_outil].push(instrument.num_instrument);
+                
+                    return dico;
+                  },
+                  {} as Record<string, number[]>
+                );
+                console.log("Tous les numéro instruments par instrument :", instrumentsParNom)
+                setNumsInstrumentsParNoms(instrumentsParNom)
+
+
             } catch (error) {
                 console.error('Erreur lors du chargement des données:', error)
             }
@@ -89,22 +114,31 @@ Definition des fonctions
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */ 
 
-  //Gestion du changement d instrument
-  const InstrumentChange = (event: SelectChangeEvent<string>) => {
-    const selectedId = parseInt(event.target.value);
-    if (isNaN(selectedId)) return //si conversion pas réussie
-    setSelectedInstrumentId(selectedId);
-  
-      const instrument = instruments.find(i => i.id_instrument === selectedId);
-      if (instrument) {
-        setSelectedInstrument(instrument.nom_outil || ''); // Store nom_outil
-        setNumInstrument(instrument.num_instrument?.toString() || '');   
-    }
+  const NomInstrumentChange = (event: SelectChangeEvent<string>) => {
+    setSelectedNomInstrument(event.target.value || ''); // Store nom_outil
+    
+    // Libérer le select suivant et le vider
+    setNumInstrumentDisabled(false);
+    setSelectedNumInstrument('');
+
+    // Enlever les champs d'en bas si la personne change d'intrument
+    setShowAdditionalInputs(false);
+    setSelectedFile(null);
   };
+
+  //Gestion du changement d instrument
+  const NumInstrumentChange = (event: SelectChangeEvent<string>) => {
+    setSelectedNumInstrument(event.target.value || '');
+
+    // Enlever les champs d'en bas si la personne change d'intrument
+    setShowAdditionalInputs(false);
+    setSelectedFile(null);
+  };
+
   const FileUpload = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.csv, .xlsx, .xls, .png, .wav';
+    fileInput.accept = '.csv, .xlsx, .xls, .jp2, .wav';
     fileInput.onchange = async (e: Event) => {
     const target = e.target as HTMLInputElement;
       if (target.files && target.files.length > 0) {
@@ -126,12 +160,13 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
         //Verification avant de passer au reste du FORM
         const verificationResult = await sendInstrumentInfo(
-            selectedInstrument, 
-            numInstrument, 
-            result.file.path// 
+            selectedNomInstrument, 
+            selectedNumInstrument, 
+            result.file.path
           ); //si reusite de verification, montrer le reste des inputs
         if (verificationResult && verificationResult.reussite === true) {
             setSelectedFile(file);
+            setCheminSelectedFile(result.file.path);
             setShowAdditionalInputs(true);
             console.log('Verification passed:', verificationResult.commentaire);
 
@@ -156,19 +191,26 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     fileInput.click();
 };
   //Gerer le changement de responsable
-  const ResponsableChange = (event: SelectChangeEvent) => {
+  const ResponsableChange = (event: SelectChangeEvent<string>) => {
     const selectedValue = event.target.value;
     setSelectedResponsable(selectedValue);
     setIsNewResponsable(false);//Remet le flag a false quand on prend un responsable autre que celui nouvellement cree
+  };
+
+const TodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const hours = String(today.getHours()).padStart(2, '0');
+  const minutes = String(today.getMinutes()).padStart(2, '0');
+  const secondes = String(today.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${secondes}`;
 };
 
 const AutofillDate = () => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      setDateRecueil(`${year}-${month}-${day}`);
-    };
+  setDateCollecteComplete(TodayDate());
+};
 
 const handleCreateResponsable = async () => {
   //Verifie si les entrees sont remplies
@@ -220,16 +262,30 @@ const handleCreateResponsable = async () => {
 
   //Evenement de Submit
   const Submit = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+    event.preventDefault();
 
-      console.log('Instrument:', selectedInstrument);
-      if (selectedFile) {
-
+    if (selectedFile) {
       console.log('Uploading file:', selectedFile.name)
-      }else {
-        console.log('No file selected')
-        alert('Veuillez sélectionner un fichier')
-        return
+    }
+    else {
+      console.log('No file selected')
+      alert('Veuillez sélectionner un fichier')
+      return
+    }
+
+    console.log("Mail responsable :", selectedResponsable)
+    console.log("Nom instrument :", selectedNomInstrument)
+    console.log("Num instrument :", selectedNumInstrument)
+    // Vérifier que ça fonctionne dans tous les cas !!! (pas que en local)
+    const resultat = "./" + cheminSelectedFile.substring(cheminSelectedFile.indexOf("server")).replace(/\\/g, "/");    
+    /*console.log("Chemin fichier :", resultat)*/
+    console.log("Commentaire :", commentaire)
+    console.log("Date de collecte :", dateCollecteComplete)
+    console.log("Extension :", extension)
+
+    if (selectedFile){
+      sendFormInfo(selectedNomInstrument, selectedNumInstrument, resultat, selectedResponsable, 
+        commentaire, dateCollecteComplete, extension)
     }
   }
 
@@ -266,28 +322,35 @@ const handleCreateResponsable = async () => {
   //autocompletion des champs du form when verification ok
   const autocompletion = (verificationData: any) => {
   if (verificationData && verificationData.reussite === true) {
-    // completion du Numéro de série
-    if (verificationData.numero_serie) {
-      setNumSerie(verificationData.numero_serie);
-    }
-    // completion de Date de recueil 
-    if (verificationData.date_recueil) {
+    // completion de Date de Collecte 
+    if (verificationData.date_collecte) {
       //formattage de la date problemes avec le format du HOBO
-      const dateStr = verificationData.date_recueil;
-      if (dateStr.length === 8) {
-        const formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
-        setDateRecueil(formattedDate);
-      } else {
-        setDateRecueil(dateStr);
+      const dateStr = verificationData.date_collecte;
+      if (!dateStr.includes(":")){ // Pour les TOMST 
+        //setDateCollecteForm(dateStr)
+        setDateCollecteComplete(dateStr + " 00:00:00")
+        //console.log("Date collecte form :", dateStr)
+        console.log("Date collecte complete :", dateStr + " 00:00:00")
       }
+      else if (dateStr == ""){
+        setDateCollecteComplete("")
+      }
+      else{ // Pour les Hobo
+        //setDateCollecteForm(dateStr.split(" ")[0])
+        setDateCollecteComplete(dateStr)
+        //console.log("Date collecte form :", dateStr.split(" ")[0])
+        console.log("Date collecte complete :", dateStr)
+      }
+    }
+    else{
+      setDateCollecteComplete("")
     }
     // completion Extension
     if (verificationData.extension) {
       setExtension(verificationData.extension);
     }
-    // completion Type source
-    if (verificationData.type_source) {
-      setTypeSource(verificationData.type_source);
+    else{
+      setExtension("")
     }
     
     console.log('Form autocompleté avec le JSON de verification SUCCESS');
@@ -296,16 +359,10 @@ const handleCreateResponsable = async () => {
 //////////////////////////////////Script de verification//////////////////////////////////////////////////
 
 //////////////////////////////////Script d'integration//////////////////////////////////////////////////
-const sendFormInfo = async (nom_outil: string, type_source: string, num_instrument: string, filePath: string,
-   num_serie: string, extension :string, date_recueil: Date, date_import:Date) => {
+const sendFormInfo = async (nom_outil: string, num_instrument: string, filePath: string, mail_responsable: string, 
+  commentaire: string, date_collecte: string, extension :string) => {
 
-
-      const select = document.getElementById("responsableID");
-      const numero = select.selectedIndex;
-
-    
     try {
-      
       const response = await apiFetch('/api/scriptInte', {
         method: 'POST',
         headers: {
@@ -313,15 +370,15 @@ const sendFormInfo = async (nom_outil: string, type_source: string, num_instrume
         },
         body: JSON.stringify({
           chemin_source: filePath,
-          type_source: type_source,
           nom_outil: nom_outil,
           num_instrument: num_instrument,
-          num_serie : num_serie,
-          extension : extension,
-          date_recueil : date_recueil,
-          date_import: date_import,
-          mail_responsable : responsables[numero].adresse_mail,
 
+          extension : extension,
+          date_collecte : date_collecte,
+          date_import: TodayDate(),
+          commentaire: commentaire,
+
+          mail_responsable : mail_responsable
         }),
       });
       if (response.ok) {
@@ -360,38 +417,46 @@ return(
                 <center><b>DÉPÔT DE FICHIER</b></center>
                 <br/>
                 </Typography>
+
             <form onSubmit={Submit}>
               <Stack spacing={3}>
 
               <FormControl fullWidth required>
-              <InputLabel>Sélectionnez l'instrument pour lequel vous souhaitez déposer un fichier</InputLabel>
+              <InputLabel>Sélectionnez le type d'instrument pour lequel vous souhaitez déposer un fichier</InputLabel>
               <Select
-                value={selectedInstrumentId?.toString() || ''} 
-                onChange={InstrumentChange}
-                label="Sélectionnez l'instrument pour lequel vous souhaitez déposer un fichier"
+                value={selectedNomInstrument?.toString() || ''} 
+                onChange={NomInstrumentChange}
+                label="Sélectionnez le type d'instrument pour lequel vous souhaitez déposer un fichier"
               >
-                {instruments.map((instrument) => (
+                {nomsInstruments.map((nom_instru) => (
                   <MenuItem 
-                    key={instrument.id_instrument} 
-                    value={instrument.id_instrument}
+                    key={nom_instru} 
+                    value={nom_instru}
                   >
-                    {instrument.nom_outil} - {instrument.num_instrument}
+                    {nom_instru}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
-              <TextField
-              label="Numéro de l'instrument"
-              variant="outlined"
-              fullWidth
-              required
-              value={numInstrument}
-              disabled // pas editable par securite 
-              InputProps={{
-                readOnly: true,
-              }}
-            />
+              <FormControl fullWidth required>
+              <InputLabel>Sélectionnez le numéro de cet instrument</InputLabel>
+              <Select
+                value={selectedNumInstrument?.toString() || ''} 
+                onChange={NumInstrumentChange}
+                label="Sélectionnez le numéro de cet instrument"
+                disabled={numInstrumentDisabled}
+              >
+                {(numsInstrumentsParNoms[selectedNomInstrument] ?? []).map(num_instrument => (
+                  <MenuItem 
+                    key={num_instrument} 
+                    value={num_instrument}
+                  >
+                    {num_instrument}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
               <Button
                   type="button"
@@ -414,31 +479,21 @@ return(
 
                 {showAdditionalInputs && (
                   <>
-                      
-                    <TextField
-                      label="Utilisateur"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={utilisateur}
-                      onChange={(e) => setUtilisateur(e.target.value)}
-                      placeholder="Qui veut déposer le fichier"
-                    />
 
                     <FormControl fullWidth required>
-                        <InputLabel>Sélectionnez le Responsable_fichier</InputLabel>
+                        <InputLabel>Sélectionnez le Responsable du fichier</InputLabel>
                         <Select
                             value={selectedResponsable}
                             id="responsableID" 
                             onChange={ResponsableChange}
-                            label="Sélectionnez le Responsable_fichier"
+                            label="Sélectionnez le Responsable du fichier"
                         >
                             {responsables.map((responsable) => (
                                 <MenuItem 
                                     key={responsable.id_personne} 
                                     value={responsable.adresse_mail}
                                 >
-                                    {responsable.nom} {responsable.prenom}
+                                    {responsable.prenom} {responsable.nom} - {responsable.adresse_mail}
                                 </MenuItem>
                             ))}
                         </Select>
@@ -493,26 +548,20 @@ return(
                     </>
                     )}
                     
-                    <TextField
-                          label="Numéro de série"
-                          variant="outlined"
-                          fullWidth
-                          required
-                          value={numSerie}
-                          onChange={(e) => setNumSerie(e.target.value)}
-                          placeholder="Entrez le numéro de série"
-                      />
-                    
                   <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
-                        label="Date de recueil"
-                        type="date"
+                        label="Date de collecte"
+                        type="datetime-local"
                         variant="outlined"
+                        id='date_collecte'
                         fullWidth
                         required
-                        value={dateRecueil}
-                        onChange={(e) => setDateRecueil(e.target.value)}
+                        value={dateCollecteComplete}
+                        onChange={(e) => setDateCollecteComplete(e.target.value.replace("T", " "))}
                         InputLabelProps={{ shrink: true }}
+                        inputProps={{
+                          step: 1, // autorise les secondes
+                        }}
                       />
                       <Button
                         type="button"
@@ -523,23 +572,12 @@ return(
                         Aujourd'hui
                       </Button>
                     </Stack>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <TextField
-                        label="Date d'import"
-                        type="date"
-                        variant="outlined"
-                        fullWidth
-                        required
-                        value={dateImport}
-                        onChange={(e) => setDateImport(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Stack>
 
                     <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
                         label="Format (extension)"
                         variant="outlined"
+                        id="extension"
                         fullWidth
                         required
                         value={extension}
@@ -548,27 +586,14 @@ return(
                       />
                     </Stack>
 
-                    <FormControl fullWidth required>
-                    <InputLabel>Type source</InputLabel>
-                    <Select
-                      value={typeSource}
-                      onChange={(e) => setTypeSource(e.target.value)}
-                      label="Type source"
-                    >
-                    <MenuItem value="fichier_mesure">fichier_mesure</MenuItem>
-                    <MenuItem value="dossier_audio">dossier_audio</MenuItem>
-                    <MenuItem value="dossier_image">dossier_image</MenuItem>
-                    </Select>
-                    </FormControl>
-
                     <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
                         label="Commentaire"
                         variant="outlined"
+                        id="commentaire"
                         fullWidth
-                        //required
-                        //value={extension}
-                        //onChange={(e) => setExtension(e.target.value)}
+                        value={commentaire}
+                        onChange={(e) => setCommentaire(e.target.value)}
                         placeholder="Commentaire sur le fichier"
                       />
                     </Stack>
@@ -579,11 +604,11 @@ return(
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={!FirstFormComplete || !selectedFile || !areAdditionalInputsComplete}
+                  disabled={!FirstFormComplete || !selectedFile}
                   sx={{
-                    bgcolor: (FirstFormComplete && selectedFile && areAdditionalInputsComplete) ? '#EC9706' : '#CCCCCC',
+                    bgcolor: (FirstFormComplete && selectedFile) ? '#EC9706' : '#CCCCCC',
                     '&:hover': {
-                      bgcolor: (FirstFormComplete && selectedFile && areAdditionalInputsComplete) ? '#C78023' : '#CCCCCC',
+                      bgcolor: (FirstFormComplete && selectedFile) ? '#C78023' : '#CCCCCC',
                     },
                   }}
                 >

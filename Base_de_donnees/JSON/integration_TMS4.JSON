@@ -13,7 +13,7 @@
     "num_instrument" : "TMS4_95224601",
     "num_serie" : "95224601",
     "extension" : "csv",
-    "date_recueil" : "2024-11-19 00:00:00",
+    "date_collecte" : "2024-11-19 00:00:00",
     "date_import" : "2026-04-25 11:07:52",
     "commentaire" : "C'est bien de tester son code pour TMS4 :)"
 }

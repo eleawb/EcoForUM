@@ -29,17 +29,17 @@ def meta(choixScript, type_fichiers, fichiers):
                 args.append(fichiers[i])
             case "projet":
                 if "personne" not in type_fichiers:
-                    sys.exit(json.dumps({"reussite":False, "commentaire":f"Pas de {choixScript} de projet sans {choixScript} de personne"}))
+                    sys.exit(json.dumps({"reussite":False, "commentaire":f"Pas de {choixScript} de projet sans {choixScript} de personne", "stderr" : "{e.stderr}", "stdout" : "{e.stdout}"}))
                 args.append("--ficProj")
                 args.append(fichiers[i])
     try:
         retour = subprocess.run([sys.executable, f"../Base_de_donnees/{choixScript}_metadonnees.py"]+args, shell=True, capture_output=True, text=True, check=True)
         #Exécution du script en permettant de stocker la valeur de "retour"(les print)
-        print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
+        #print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
     except subprocess.CalledProcessError as e:
-        print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des metadonnees a echoue avec le code d'erreur : {e.returncode}"}))
+        print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des metadonnees a echoue avec le code d'erreur : {e.returncode}", "stderr" : "{e.stderr}", "stdout" : "{e.stdout}"}))
         #"Retour" de notre script si tout ne s'est pas bien passé
-        print(e.stderr)               #Si l'on veut voir tout le message d'erreur effectuer par le script défectueux
+        #print(e.stderr)               #Si l'on veut voir tout le message d'erreur effectuer par le script défectueux
         #sys.exit(e.stdout)            #Si l'on veut voir tout les print effectuer par le script défectueux
 
 
@@ -68,12 +68,12 @@ def nonMeta(choixScript, instrument, metaJson, cheminFichierMesure):
         #"Retour" de notre script si tout ne s'est pas bien passé
         try:
             os.remove(cheminFichierMesure)
-            print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des donnees a echoue avec le code d'erreur : {e.returncode} mais la copie du fichier a bien pu etre supprimer"}))
+            print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des donnees a echoue avec le code d'erreur : {e.returncode} mais la copie du fichier a bien pu etre supprimer", "stderr" : "{e.stderr}", "stdout" : "{e.stdout}"}))
         except (FileNotFoundError, PermissionError):
-            print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des donnees a echoue avec le code d'erreur : {e.returncode} et la copie du fichier n'a pas pu etre supprimer"}))
+            print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des donnees a echoue avec le code d'erreur : {e.returncode} et la copie du fichier n'a pas pu etre supprimer", "stderr" : "{e.stderr}", "stdout" : "{e.stdout}"}))
         
-        print(e.stderr)            #Si l'on veut voir le message d'erreur effectuer par le script défectueux
-        print(e.stdout)            #Si l'on veut voir les print effectuer par le script défectueux jusqu'au moment de l'erreur
+        #print(e.stderr)            #Si l'on veut voir le message d'erreur effectuer par le script défectueux
+        #print(e.stdout)            #Si l'on veut voir les print effectuer par le script défectueux jusqu'au moment de l'erreur
 
 
 if __name__ == "__main__":

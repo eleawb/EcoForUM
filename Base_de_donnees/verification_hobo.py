@@ -112,7 +112,7 @@ def verification_hobo(metajson):
     dico = {
         "numero_serie" : "",
         "extension" : "",
-        "date_recueil" : "",
+        "date_collecte" : "",
         "reussite" : False,
         "commentaire" : "",
         #"date_import" : "",
@@ -217,7 +217,7 @@ def verification_hobo(metajson):
             # Conversion des underscores en deux-points
             clean_dt = raw_dt.replace("_", ":")
             #print("Format standard :", clean_dt)
-            dico["date_recueil"] = clean_dt
+            dico["date_collecte"] = clean_dt
 
     dico["type_source"] = "fichier_mesure"
     #with open("retour.json", "w", encoding="utf-8") as f:

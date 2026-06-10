@@ -13,7 +13,7 @@
     "num_instrument" : "Dendro_92261195",
     "num_serie" : "92261195",
     "extension" : "csv",
-    "date_recueil" : "2026-03-26 00:00:00",
+    "date_collecte" : "2026-03-26 00:00:00",
     "date_import" : "2026-04-30 17:26:18",
     "commentaire" : "C'est bien de tester son code pour Dendromètre :)"
 }
