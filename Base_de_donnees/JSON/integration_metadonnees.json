@@ -1,0 +1,10 @@
+{"date_import" : "2026-06-09 10:22:03",
+"commentaire" : "Test intégration toutes les métadonnées",
+
+"mail_responsable" : "anna.tomie@umontpellier.fr",
+"est_responsable_fichier" : false,
+"nom" : "Tomie",
+"prenom" : "Anna",
+"fonction" : "Enseignant",
+"encadre_par" : "sam.ouraille@umontpellier.fr"
+}
