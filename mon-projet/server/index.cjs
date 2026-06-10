@@ -249,6 +249,7 @@ app.post('/api/recherche', async (req, res) => {
             SELECT DISTINCT
                 i.id_instrument,
                 i.nom_outil,
+                i.num_instrument,
                 sf.nb_colonnes,
                 sf.nom_colonnes,
                 sf.colonnes_a_traiter,
@@ -490,7 +491,8 @@ app.post('/api/recherche', async (req, res) => {
             instrumentColonnes.set(struct.id_instrument, {
                 nom: struct.nom_outil,
                 nb_colonnes: struct.nb_colonnes,
-                nomsColonnes: nomsColonnes
+                nomsColonnes: nomsColonnes,
+                num_instru: struct.num_instrument
             })
         }
 
@@ -502,6 +504,7 @@ app.post('/api/recherche', async (req, res) => {
                 nom: info.nom,
                 nb_colonnes: info.nb_colonnes,
                 nomsColonnes:info.nomsColonnes,
+                num_instru: info.num_instru,
                 mesures: []
             })
         }
@@ -569,8 +572,8 @@ app.post('/api/recherche', async (req, res) => {
             for (var date in date_mesure) {
                 const nouvelleLigne = {}
                 const nouvelleLigneCorr = {}
-                nouvelleLigne["Instrument"] = instrument.nom
-                nouvelleLigneCorr["Instrument"] = instrument.nom
+                nouvelleLigne["Instrument"] = instrument.num_instru
+                nouvelleLigneCorr["Instrument"] = instrument.num_instru
                 for (let row of date_mesure[date]){
                     //console.log(row)
                     //console.log(instrument.nomsColonnes)
