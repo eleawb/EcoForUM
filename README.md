@@ -194,23 +194,29 @@ S'ils ne sont pas installés (la version ne s'affiche pas), vous pouvez trouver 
 ### Lancer l'application
 
 __Installer les dépendances :__  
-Mettez-vous dans `"projet-l3-ecoforum/mon-projet"` pour avoir accès au `"package.json"` qui contient les dépendances à installer.
+- Ouvrez un terminal.
+- Mettez-vous dans `"projet-l3-ecoforum/mon-projet"` grâce à la commande `cd <chemin_du_dossier>`, en remplaçant `<chemin_du_dossier>` par le chemin du dossier. Cela vous donnera accès au `"package.json"` qui contient les dépendances à installer.
+- Entrez la commande suivante :
 ```bash
 npm install 
 ```
 __S'il y a des problèmes avec une dépendance :__ 
-```
+- Entrez la commande suivante :
+```bash
 npm install 'dependance'
 ```
 __Lancer l'application avec vite (en local) :__ 
+- Entrez la commande suivante :
 ```bash
 npm run dev:all
 ```
-L'application sera disponible à l'adresse "http://localhost:5173/".
+L'application sera disponible à l'adresse "http://localhost:5173/". Vous pourrez y accéder via un navigateur internet, et seulement sur votre machine.
 
 __Lancer l'application avec ngrok (en mode distant)__ :
 
-- Installer ngrok : se créer un compte sur le site `https://ngrok.com/` puis installer en fonction du système d'exploitation de votre machine.
+- Installer ngrok : se créer un compte sur le site `https://ngrok.com/` puis installer en fonction du système d'exploitation de votre machine.  
+
+Les commandes suivantes se font via le terminal.
 
 - Configurer ngrok en ajoutant le token d'authentification retrouvable dans l'onglet `Setup & Installation` de votre compte :  
 ```bash
@@ -235,7 +241,8 @@ L'application sera ensuite disponible à une adresse fournie par ngrok.
 
 ### Appel au controleur pour lancer des scripts
 
-Placez-vous tout d'abord à la base du projet `"projet-l3-ecoforum"`.
+Ouvrez un terminal et placez-vous à la base du projet `"projet-l3-ecoforum"` de la même manière que précédemment.  
+Pour les commandes suivantes, n'écrivez que `python` **OU** `python3`, pas les deux. Le mot-clef de python3 dépend généralement de votre ordinateur.
 
 __Sous Linux :__ 
 ```bash
