@@ -165,14 +165,31 @@ Le .env est dans le .gitignore pour ne pas que le fichier soit ajouté au gitlab
 
 ### Installer NodeJS et npm si besoin
 
-- Vérifiez si NodeJS et npm sont déjà installés ou non sur votre ordinateur avec :
+Vérifiez si NodeJS et npm sont installés.  
+- Ouvrez un terminal
+- Entrez les commandes suivantes :
 ```bash
 node -v
 npm -v
-```
-- S'ils ne le sont pas (la version ne s'affiche pas), installez les depuis `"nodejs.org"`
-    - Installez la version LTS la plus récente
-    - Cochez 'add to Path' et 'install npm package manager'
+```  
+S'ils sont installés, leur version devrait s'afficher.
+
+S'ils ne sont pas installés (la version ne s'affiche pas), vous pouvez trouver les packages sur [nodejs.org](https://nodejs.org/fr/download) :  
+* Pour notre installation, nous utiliserons un Node.js® préconstruit indiqué ci-dessous.  
+![NodeJS préconstruit](images_readme/29-nodejs_dl.png)  
+* Vous devez connaître l'architecture de votre ordinateur pour choisir la bonne version. Pour cela :
+    - Si vous êtes sur Windows :  
+        - Ouvrez les `Paramètres`
+        - Allez dans l'onglet `Système`, puis cliquez sur `Informations système`
+        - Dans les informations sur l'appareil, vous verrez `Type du système`, qui vous indiquera l'architecture de votre ordinateur (x64 ou ARM64)
+    - Si vous êtes sur MacOS :
+        - Cliquez sur le logo d'Apple en haut à gauche de votre écran. Une fenêtre devrait s'ouvrir.
+        - Cliquez sur `À propos de ce Mac`
+        - Dans la section `Vue d'ensemble`, vous verrez `Puce`.
+        - Si votre puce est une puce Apple (M1 ou M2), vous avez une architecture en ARM64. Si c'est une Intel, vous êtes normalement en x64.
+    - Si vous êtes sur un Linux, comme toujours, la ligne de commande adaptée est votre meilleure amie.
+* Téléchargez ensuite l'installateur adapté à votre ordinateur selon les instructions au-dessus, et lancez-le.
+* Lors de l'installation, cochez bien l'option `install npm package manager`. **Si vous êtes sur Windows**, n'oubliez pas de cocher également l'option `add to Path`.
 
 ### Lancer l'application
 
