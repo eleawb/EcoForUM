@@ -1,7 +1,5 @@
 # Projet L3 EcoForum 2025-2026
 
-[Lien vers le drive du projet](https://drive.google.com/drive/folders/1pDWjVzZtVJSltq6X1iO6_A5gh6dT9goN)
-
 ## Nom des étudiants en L3 informatique
 - Aurore Minihot
 - Éléa Weber
@@ -27,10 +25,11 @@ se mettre dans /mon-projet
 pour lancer le client et le serveur en simultané : lancer "npm run dev:all"
 -->
 
+## Liens utiles
 
-
-Carte des zones du campus avec instruments de mesure :
-https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0
+- [Carte des zones du campus avec instruments de mesure](https://www.google.com/maps/d/u/1/viewer?ll=43.63208270185771%2C3.8634961583030103&z=17&mid=1zQxZ4ap-1xYahwCcU7LALE8AnQ5Dhs0)
+- [Drive du projet](https://drive.google.com/drive/folders/1pDWjVzZtVJSltq6X1iO6_A5gh6dT9goN)
+- [Dictionnaire des données de la base de données EcoForUM](https://docs.google.com/document/d/1v3GczGLe2le9Q79rml1vqW_xhcUc0KFQiYP5INEfUc4/edit?tab=t.0#heading=h.l1curom0k6it)
 
 ## Téléchargement du Projet via gitlab
 
