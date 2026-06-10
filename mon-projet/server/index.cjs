@@ -531,7 +531,6 @@ app.post('/api/recherche', async (req, res) => {
        //détermination de ttes les colonnes uniques à afficher (fusionner tous les noms de colonnes)
        const uniqueColonnes = new Map() // Map pour garder l'ordre d'affichage si on recoche une colonne 
        uniqueColonnes.set('Instrument', true)
-       uniqueColonnes.set('Capteur', true)
 
        for (const [id, instrument] of instrumentsMap) {
            for (var colNum in instrument.nomsColonnes) {
@@ -564,73 +563,70 @@ app.post('/api/recherche', async (req, res) => {
 
         for (const [id, instrument] of instrumentsMap) {
             if (instrument.mesures.length === 0) continue
+            let date_mesure = {}
+            instrument.mesures.map((mes) => date_mesure[new Date(mes.date_heure).getTime()]? (date_mesure[new Date(mes.date_heure).getTime()].push(mes)) :(date_mesure[new Date(mes.date_heure).getTime()] = [mes]))
             
-            for (const row of instrument.mesures) {
-                //console.log(row)
-                //console.log(instrument.nomsColonnes)
-                //ignorer les doublons d'id_mesure
-                if (idsMesureVus.has(row.id_mesure)) continue
-                idsMesureVus.add(row.id_mesure)
-                
+            for (var date in date_mesure) {
                 const nouvelleLigne = {}
                 const nouvelleLigneCorr = {}
-                nouvelleLigne["Instrument"] = row.instrument
-                nouvelleLigne["Capteur"] = row.capteur
-                nouvelleLigneCorr["Instrument"] = row.instrument
-                nouvelleLigneCorr["Capteur"] = row.capteur
-                    //console.log(instrument.nomsColonnes.keys)
+                nouvelleLigne["Instrument"] = instrument.nom
+                nouvelleLigneCorr["Instrument"] = instrument.nom
+                for (let row of date_mesure[date]){
+                    //console.log(row)
+                    //console.log(instrument.nomsColonnes)
+                    //ignorer les doublons d'id_mesure
+                    if (idsMesureVus.has(row.id_mesure)) continue
+                    idsMesureVus.add(row.id_mesure)
+            
+                    //console.log(idsMesureVus)
            
-               //remplissage des colonnes avec les vrais noms
-                for (var i in instrument.nomsColonnes) {
-                    const colName = instrument.nomsColonnes[i]
-                    
-                    //si c'est la colonne de donnée (la seule qui n'est pas Instrument, Capteur, Date)
-                    if (i == row.num_colonne) {
-                        //valeur mesurée
-                        if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
-                            if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
-                                nouvelleLigneCorr[colName] = row.valeur_mesure_corrigee
-                                //ajouter une indication que la valeur est corrigée
-                                //nouvelleLigne[`${colName}_corrige`] = true
-                            } else {
-                                nouvelleLigneCorr[colName] = row.valeur_mesure
+                    //remplissage des colonnes avec les vrais noms
+                    //console.log(instrument.mesures.filter(mes => (new Date(mes.date_heure).getTime() === new Date(mesure.date_heure).getTime())), "HEY")
+                    idsMesureVus.add(row.id_mesure)
+                    for (var i in instrument.nomsColonnes) {
+                        const colName = instrument.nomsColonnes[i]
+                        
+                        //si c'est la colonne de donnée (la seule qui n'est pas Instrument, Capteur, Date)
+                        if (i == row.num_colonne) {
+                            //valeur mesurée
+                            if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
+                                if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
+                                    nouvelleLigneCorr[colName] = row.valeur_mesure_corrigee
+                                    //ajouter une indication que la valeur est corrigée
+                                    //nouvelleLigne[`${colName}_corrige`] = true
+                                } else {
+                                    nouvelleLigneCorr[colName] = row.valeur_mesure
+                                }
+                                nouvelleLigne[colName] = row.valeur_mesure
                             }
-                            nouvelleLigne[colName] = row.valeur_mesure
+                        }
+                        //si c'est la colonne date/heure
+                        else if (colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')) {
+                            nouvelleLigne[colName] = row.date_heure 
+                                ? new Date(row.date_heure).toLocaleString('fr-FR')
+                                : '-'
+                            nouvelleLigneCorr[colName] = row.date_heure 
+                                ? new Date(row.date_heure).toLocaleString('fr-FR')
+                                : '-'
+                        }
+
+                    }
+
+                    //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
+                    if (afficherColonneCoeff) {
+                        if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
+                            nouvelleLigneCorr["Coefficient correcteur"] = `${row.coefficient_applique}`
                         } else {
-                            nouvelleLigne[colName] = '-'
-                            nouvelleLigneCorr[colName] = '-'
+                            nouvelleLigneCorr["Coefficient correcteur"] = "-"
                         }
                     }
-                    //si c'est la colonne date/heure
-                    else if (colName.toLowerCase().includes('date') || colName.toLowerCase().includes('heure')) {
-                        nouvelleLigne[colName] = row.date_heure 
-                            ? new Date(row.date_heure).toLocaleString('fr-FR')
-                            : '-'
-                        nouvelleLigneCorr[colName] = row.date_heure 
-                            ? new Date(row.date_heure).toLocaleString('fr-FR')
-                            : '-'
+
+
+                    //afficher colonne maintenance 
+                    if (afficherColonneMaintenance){
+                        nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
+                        nouvelleLigneCorr["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
                     }
-                    else {
-                        nouvelleLigne[colName] = '-'
-                        nouvelleLigneCorr[colName] = '-'
-                    }
-
-                }
-
-                //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
-                if (afficherColonneCoeff) {
-                    if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
-                        nouvelleLigneCorr["Coefficient correcteur"] = `${row.coefficient_applique}`
-                    } else {
-                        nouvelleLigneCorr["Coefficient correcteur"] = "-"
-                    }
-                }
-
-
-                //afficher colonne maintenance 
-                if (afficherColonneMaintenance){
-                    nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
-                    nouvelleLigneCorr["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
                 }
                 
                tousLesResultats.push(nouvelleLigne)
