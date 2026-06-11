@@ -148,10 +148,14 @@ def verification_hobo(metajson):
         entetes = next(ws.iter_rows(max_row=1, values_only=True))#lis la ligne des en-têtes (donne un tuple)
         entetes = list(entetes)#on transforme le tuple en liste ?
 
-        cols = row[2].split("; ")
+        cols = row[2].split(";")
+        for i in range(len(cols)) :
+            if "||" in cols[i]:
+                cols[i] = cols[i].split("||")
+        #print(cols)
         lcols = []
         for c in cols:
-            lcols.append(expand_item(c))
+            lcols.append(c)
         #print(lcols)
             
         for i in range(colonnes):
