@@ -846,10 +846,24 @@ app.post('/api/scriptInte', async (req, res) => {
     
     console.log('Received integration request:', { chemin_source, nom_outil, num_instrument, extension, 
         date_collecte, date_import, commentaire, mail_responsable })
+
+    // Change file name (add today's date)
+    const file_name = path.basename(
+        chemin_source,
+        path.extname(chemin_source)
+      );
+    const ext = path.extname(chemin_source);
+    const newPath = path.dirname(chemin_source).replace(/\\/g, "/") + "/" +
+        `${file_name}__${date_import.replaceAll(":", "_")}${ext}`;
+    fs.rename(chemin_source, newPath, (err) => {
+        if (err) console.error(err);
+      });
+    console.log(`Fichier de données renommé avec succès !\nNouveau nom : ${file_name}__${date_import.replaceAll(":", "_")}${ext}`)
+
     // Build the JSON structure expected by controleur.py
     const jsonInput = {
         script: "integration",
-        chemin_source: chemin_source,
+        chemin_source: newPath,
         nom_outil: nom_outil,
         num_instrument: num_instrument,
 
