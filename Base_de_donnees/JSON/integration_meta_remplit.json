@@ -1,5 +1,16 @@
 {
-    "type_script" : ["personne", "capteur", "localisation", "projet"],
+    "type_script" : ["personne", "capteur", "projet"],
     "script" : "inte_metadonnees",
-    "fichier_donnees" : ["Metadonnees_personnes.xlsx", "Metadonnees_instruments_capteurs.xlsx", "Metadonnees_localisations.xlsx", "Metadonnees_projets.xlsx"]
+    "fichier_donnees" : ["../Base_de_donnees/Fichiers_metadonnees/Metadonnees_personnes.xlsx", 
+    "../Base_de_donnees/Fichiers_metadonnees/Metadonnees_instruments_capteurs.xlsx", 
+    "../Base_de_donnees/Fichiers_metadonnees/Metadonnees_projets.xlsx"],
+    "date_import" : "2026-06-09 10:22:03",
+    "commentaire" : "Test intégration toutes les métadonnées",
+
+    "mail_responsable" : "anna.tomie@umontpellier.fr",
+    "est_responsable_fichier" : false,
+    "nom" : "Tomie",
+    "prenom" : "Anna",
+    "fonction" : "Enseignant",
+    "encadre_par" : "sam.ouraille@umontpellier.fr"
 }
