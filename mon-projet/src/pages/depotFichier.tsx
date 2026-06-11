@@ -124,6 +124,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     // Enlever les champs d'en bas si la personne change d'intrument
     setShowAdditionalInputs(false);
     setSelectedFile(null);
+    setCommentaire('');
+    setSelectedResponsable('');
   };
 
   //Gestion du changement d instrument
@@ -133,6 +135,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     // Enlever les champs d'en bas si la personne change d'intrument
     setShowAdditionalInputs(false);
     setSelectedFile(null);
+    setCommentaire('');
+    setSelectedResponsable('');
   };
 
   const FileUpload = () => {
@@ -428,7 +432,7 @@ return(
                 onChange={NomInstrumentChange}
                 label="Sélectionnez le type d'instrument pour lequel vous souhaitez déposer un fichier"
               >
-                {nomsInstruments.map((nom_instru) => (
+                {nomsInstruments.slice().sort().map((nom_instru) => (
                   <MenuItem 
                     key={nom_instru} 
                     value={nom_instru}
@@ -447,7 +451,7 @@ return(
                 label="Sélectionnez le numéro de cet instrument"
                 disabled={numInstrumentDisabled}
               >
-                {(numsInstrumentsParNoms[selectedNomInstrument] ?? []).map(num_instrument => (
+                {(numsInstrumentsParNoms[selectedNomInstrument] ?? []).slice().sort().map(num_instrument => (
                   <MenuItem 
                     key={num_instrument} 
                     value={num_instrument}
@@ -488,7 +492,14 @@ return(
                             onChange={ResponsableChange}
                             label="Sélectionnez le Responsable du fichier"
                         >
-                            {responsables.map((responsable) => (
+                            {responsables.slice() // évite de modifier le tableau d'origine
+                                .sort((a, b) => {
+                                  const nom = a.nom.localeCompare(b.nom);
+                          
+                                  return nom !== 0
+                                      ? nom
+                                      : a.prenom.localeCompare(b.prenom);
+                                }).map((responsable) => (
                                 <MenuItem 
                                     key={responsable.id_personne} 
                                     value={responsable.adresse_mail}
