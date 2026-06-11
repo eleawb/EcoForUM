@@ -57,12 +57,17 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
 
     #pour obtenir le chemin jusqu'au repertoire dans lequel se trouve ce programme (car dans mon cas les fichiers .xlsx y sont aussi)
     #s'ils n'y sont pas dans la version finale, il faudra donner dans chemin le chemin vers le répertoire où ils sont stockés
-    
+
     #dictionnaire qui sera renvoyé en tant que JSON au contrôleur
     dico = {
         "reussite" : False,
         "commentaire" : "",
     }
+
+    if ficPers is None and ficInstr is None and ficProj is None :
+        dico["commentaire"] = "Il n'y avait aucun fichier à intégrer..."
+        print(json.dumps(dico))
+        return 0
 
     """
     if Path(os.getcwd()).stem == "projet-l3-ecoforum":
@@ -403,7 +408,7 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
     fics = [ficPers, ficInstr, ficProj]
     for i in range(len(fics)) :
         if fics[i] != None :
-            ext = Path(fics[i]).suffix
+            ext = str(Path(fics[i]).suffix).split(".")[1]
             nom_fic = Path(fics[i]).stem
             chemin_fic = str(Path(fics[i]))
             if i == 0 :
