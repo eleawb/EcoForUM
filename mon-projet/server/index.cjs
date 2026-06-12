@@ -234,13 +234,13 @@ app.post('/api/recherche', async (req, res) => {
         //fonction pr vérifier si une mesure est faite sous période de maintenance
         function estEnMaintenance(capteurKey, dateMesure) {
             const maintenances = maintenancesMap.get(capteurKey) //recup la liste de maintenance pour un capteur specifiqiue
-            if (!maintenances || maintenances.length === 0) return false //si aucune maintenance pr le capteur, false
+            if (!maintenances || maintenances.length === 0) return true //si aucune maintenance pr le capteur, false
             
             const dateMesureObj = new Date(dateMesure) //conversion de la date de mesure
             
             //verification si la mesure tombe dans au moins une periode maintenance
             return maintenances.some(maint => { //vrai si qq mesures prises sous maintenance trouvées
-                return dateMesureObj >= maint.date_debut && dateMesureObj <= maint.date_fin //dateMesure comprise entre date_debut et date_fin
+                return !(dateMesureObj >= maint.date_debut && dateMesureObj <= maint.date_fin) //dateMesure comprise entre date_debut et date_fin
             })
         }
 
@@ -528,7 +528,7 @@ app.post('/api/recherche', async (req, res) => {
     
         //afficher la colonne "maintenance" que données prises sous maintenance > 0  
         const afficherColonneMaintenance = mesuresFiltrees.some(row=>
-            row.est_en_maintenance === true) || result.rows.some(row => row.est_en_maintenance === true)
+            row.est_en_maintenance === false) || result.rows.some(row => row.est_en_maintenance === false)
             //true si qq mesures prises sous maintenance (cas avec ou sans filtres dates)
 
        //détermination de ttes les colonnes uniques à afficher (fusionner tous les noms de colonnes)
@@ -539,23 +539,23 @@ app.post('/api/recherche', async (req, res) => {
            for (var colNum in instrument.nomsColonnes) {
                if (!uniqueColonnes.has(instrument.nomsColonnes[colNum])) {
                    uniqueColonnes.set(instrument.nomsColonnes[colNum], true)
+                   //afficher après colonne mesures que si minimum une valeur corrigée
+                   if(afficherColonneCoeff && !(instrument.nomsColonnes[colNum].includes("Date"))){
+                       uniqueColonnes.set(instrument.nomsColonnes[colNum]+" corrigé", true)
+                       console.log("valeur afficherColonneCoeff : ", afficherColonneCoeff)
+                       uniqueColonnes.set(`Coefficient correcteur ${instrument.nomsColonnes[colNum]}`, true)
+                    }//si coeff correcteur
                }
            }
        }
 
-       //afficher après colonne mesures que si minimum une valeur corrigée
-       if (afficherColonneCoeff) {
-            console.log("valeur afficherColonneCoeff : ", afficherColonneCoeff)
-            uniqueColonnes.set('Coefficient correcteur', true)
-        } //si coeff correcteur
-
-            //afficher colonne maintenance que si minimum une mesure prise sous maintenance 
+        //afficher colonne maintenance que si minimum une mesure prise sous maintenance 
         if (afficherColonneMaintenance) {
             console.log("valeur estEnMaintenance : ", estEnMaintenance, " donc afficherColonneMiantenance : ", afficherColonneMaintenance)
-            uniqueColonnes.set('Mesure prise sous maintenance ?', true)
+            uniqueColonnes.set('Mesure fiable ?', true)
         } 
 
-       
+       //console.log("valeur afficherColonneCoeff : ", uniqueColonnes)
        const entetesGlobales = Array.from(uniqueColonnes.keys())
        
 
@@ -594,12 +594,20 @@ app.post('/api/recherche', async (req, res) => {
                             //valeur mesurée
                             if (row.valeur_mesure !== null && row.valeur_mesure !== undefined) {
                                 if (row.valeur_mesure_corrigee !== null && row.valeur_mesure_corrigee !== undefined) {
-                                    nouvelleLigneCorr[colName] = row.valeur_mesure_corrigee
+                                    nouvelleLigneCorr[colName] = row.valeur_mesure
+                                    nouvelleLigneCorr[colName+" corrigé"] = row.valeur_mesure_corrigee
                                     //ajouter une indication que la valeur est corrigée
                                     //nouvelleLigne[`${colName}_corrige`] = true
-                                } else {
-                                    nouvelleLigneCorr[colName] = row.valeur_mesure
+                                    //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
+                                    if (afficherColonneCoeff) {
+                                        if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
+                                            nouvelleLigneCorr[`Coefficient correcteur ${colName}`] = `${row.coefficient_applique}`
+                                        } else {
+                                            nouvelleLigneCorr[`Coefficient correcteur ${colName}`] = "-"
+                                        }
+                                    }
                                 }
+                                nouvelleLigneCorr[colName] = row.valeur_mesure
                                 nouvelleLigne[colName] = row.valeur_mesure
                             }
                         }
@@ -614,21 +622,15 @@ app.post('/api/recherche', async (req, res) => {
                         }
 
                     }
-
-                    //affichage colonne coeffs correcteurs que si présence de valeurs corrigées
-                    if (afficherColonneCoeff) {
-                        if (row.coefficient_applique !== 0 && row.coefficient_applique !== undefined) {
-                            nouvelleLigneCorr["Coefficient correcteur"] = `${row.coefficient_applique}`
-                        } else {
-                            nouvelleLigneCorr["Coefficient correcteur"] = "-"
-                        }
-                    }
+                    
 
 
-                    //afficher colonne maintenance 
+                    //afficher colonne maintenance
+                    //console.log(mesuresFiltrees)
+                    //console.log(mesuresFiltrees.every(row=>row.est_en_maintenance === false)) 
                     if (afficherColonneMaintenance){
-                        nouvelleLigne["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
-                        nouvelleLigneCorr["Mesure prise sous maintenance ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
+                        nouvelleLigne["Mesure fiable ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
+                        nouvelleLigneCorr["Mesure fiable ?"] = row.est_en_maintenance ? "Oui" : "Non" //oui si sous maintenance, non sinon
                     }
                 }
                 

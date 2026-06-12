@@ -1001,6 +1001,7 @@ const renderPeriodeInput = (periode: {id: string, type: string, valeur: string})
                 <center><b>FORMULAIRE DE RECHERCHE</b></center>
                 <br></br>
                 </Typography>
+                    <fieldset disabled={clique} style={{border : 0}}>
                     <form onSubmit={boutonSubmit}>
                         <Stack spacing={3}>
 
@@ -1556,6 +1557,7 @@ const renderPeriodeInput = (periode: {id: string, type: string, valeur: string})
                           </Stack>
                           </Stack>
                     </form>
+                    </fieldset>
                 </Paper>
             </Container>
             

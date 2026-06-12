@@ -74,13 +74,37 @@ function ResultatsRecherche() {
         const ColonneChange = (colonne: string) => {
             setColonnesSelectionnees(prev => {
                 const newSelection = new Set(prev) //set pour garder l'ordre et pas de doublons
-                if (newSelection.has(colonne)) {
-                    newSelection.delete(colonne)
-                } else {
-                    newSelection.add(colonne)
-                }
                 if(colonne === "Coefficient correcteur"){
                     setCorrection(!correction)
+                    if(correction){
+                        for (let col of newSelection) {
+                            if(col.includes("corrigé"))
+                                newSelection.delete(col)
+                            else if(col.includes("Coefficient correcteur"))
+                                newSelection.delete(col)
+                        }
+                    } else {
+                        console.log(colonnes)
+                        for (let col of colonnes) {
+                            if(col.includes("corrigé"))
+                                newSelection.add(col)
+                            else if(col.includes("Coefficient correcteur"))
+                                newSelection.add(col)
+                        }
+                        console.log(colonnes)
+                    }
+                } else if (newSelection.has(colonne)) {
+                    newSelection.delete(colonne)
+                    if (newSelection.has(colonne+" corrigé")){
+                        newSelection.delete(colonne+" corrigé")
+                        newSelection.delete("Coefficient correcteur "+colonne)
+                    }
+                } else {
+                    newSelection.add(colonne)
+                    if (correction && colonnes.includes(colonne+" corrigé")){
+                        newSelection.add(colonne+" corrigé")
+                        newSelection.add("Coefficient correcteur "+colonne)
+                    }
                 }
                 return newSelection
             })
@@ -91,8 +115,10 @@ function ResultatsRecherche() {
         // sélection/désélection de toutes les colonnes
         const SelectTout = () => {
             if (colonnesSelectionnees.size === colonnes.length) {
+                setCorrection(false)
                 setColonnesSelectionnees(new Set())
             } else {
+                setCorrection(true)
                 setColonnesSelectionnees(new Set(colonnes))
             }
         }
@@ -210,7 +236,7 @@ function ResultatsRecherche() {
                                     />
                                     {/*choix des colonnes*/}
                                     {colonnes.map((col) => (
-                                        (col!="Coefficient correcteur")?
+                                        (!(col.includes("Coefficient correcteur")||col.includes("corr")))?
                                             (<FormControlLabel
                                                 key={col}
                                                 control={
@@ -221,19 +247,19 @@ function ResultatsRecherche() {
                                                     />
                                                 }
                                                 label={col}
-                                            />):
-                                            (<FormControlLabel
-                                                key={col}
-                                                control={
-                                                    <Checkbox
-                                                        checked={colonnesSelectionnees.has(col)}
-                                                        onChange={() => ColonneChange(col)}
-                                                        size="small"
-                                                    />
-                                                }
-                                                label={"Correction des mesures?"}
-                                            />)
+                                            />):void(0)
                                     ))}
+                                    {colonnes.some(col => col.includes("Coefficient correcteur"))
+                                    ?(<FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={correction}
+                                                onChange={() => ColonneChange("Coefficient correcteur")}
+                                                size="small"
+                                            />
+                                        }
+                                        label={"Correction des mesures?"}
+                                    />):void(0)}
                                 </Stack>
                             </Paper>
                             
