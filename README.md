@@ -245,22 +245,22 @@ Pour les commandes suivantes, n'écrivez que `python` **OU** `python3`, pas les 
 
 __Sous Linux :__ 
 ```bash
-python/python3 -m venv .venv
+python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 __Sous Windows :__
 ```bash
-python/python3 -m venv .venv
-.venv/Scripts/activate.bat
+python -m venv .venv
+.venv\Scripts\activate.bat
 pip install -r requirements.txt
 ```
 
 **Pour lancer la vérification/intégration d'un fichier de mesure ou de métadonnées depuis le controleur :**
 ```bash
 cd mon-projet
-python/python3 ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
+python ../Base_de_donnees/controleur.py 'chemin_fichier_JSON'
 ```
 
 ### JSON à fournir au controleur
