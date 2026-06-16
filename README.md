@@ -162,9 +162,54 @@ Le .env est dans le .gitignore pour ne pas que le fichier soit ajouté au gitlab
 
 ## Requis pour lancer l'application (sans dockerisation)
 
+### Installer Python et pip si besoin
+**Vérifier si Python 3.xx et pip sont installés.**  
+- Ouvrez un terminal
+- Entrez la commande :
+```ps1
+python
+```
+Il se peut que vous ayiez des soucis avec le raccourci. Dans ce cas, essayez de taper la commande :
+```bash
+python3
+```
+- Si vous avez Python, il devrait se lancer en affichant sa version, comme dans les exemples ci-dessous.  
+![Windows cmd Python](images_readme/30-python_terminal_windows.png)  
+![Ubuntu terminal Python3](images_readme/31-python_terminal_ubuntu.png)
+- Pour quitter python, entrez la commande : 
+```ps1
+quit
+```
+Si cela ne fonctionne pas, il se peut que la commande soit : 
+```bash
+quit()
+```
+- Si vous n'avez pas de version de python supérieure à la 3, vous pouvez directement passer à la section sur l'installation.
+- Si vous avez une version de python supérieure à la 3, entrez la commande : 
+```bash
+pip --version
+```
+S'il est installé, sa version devrait s'afficher comme dans les exemples ci-dessous.  
+![Windows cmd pip](images_readme/32-pip_terminal_windows.png)  
+![Ubuntu terminal pip](images_readme/33-pip_terminal_ubuntu.png)
+- Installez la dernière version de pip avec la commande : 
+```bash
+pip install --upgrade pip
+```
+![Windows cmd pip upgrade](images_readme/34-pip_upgrade_windows.png)  
+![Ubuntu terminal pip upgrade](images_readme/35-pip_upgrade_ubuntu.png)
+
+**Installation de Python 3**  
+Si vous n'avez pas Python 3, suivez l'installation sur votre système d'exploitation en suivant les instructions sur [le site officiel de Python](https://www.python.org/) : https://www.python.org/
+
+**Installation de pip**  
+*Une fois que vous avez installé Python*, suivez l'installation sur votre système d'exploitation en suivant les instructions sur [la documentation de pip](https://pip.pypa.io/en/stable/installation/) : https://pip.pypa.io/en/stable/installation/.  
+Si vous êtes sur un Linux Ubuntu, il se peut que la commande qui fonctionnera sera plutôt un `sudo apt-get install python3-pip`.
+
+
 ### Installer NodeJS et npm si besoin
 
-Vérifiez si NodeJS et npm sont installés.  
+**Vérifier si NodeJS et npm sont installés.**
 - Ouvrez un terminal
 - Entrez les commandes suivantes :
 ```bash
@@ -172,6 +217,8 @@ node -v
 npm -v
 ```  
 S'ils sont installés, leur version devrait s'afficher.
+
+**Installation de NodeJS et npm**
 
 S'ils ne sont pas installés (la version ne s'affiche pas), vous pouvez trouver les packages sur [nodejs.org](https://nodejs.org/fr/download) :  
 * Pour notre installation, nous utiliserons un Node.js® préconstruit indiqué ci-dessous.  
