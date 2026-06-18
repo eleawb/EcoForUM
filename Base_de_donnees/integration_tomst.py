@@ -48,6 +48,7 @@ def insert_responsable(nom, prenom, adresse_mail, fonction, mail_encadrant):
         id_encadrant = cur.fetchone()
         id_encadrant = id_encadrant[0]
         # Ajout de la personne correspondant au responsable
+        ####### Prendre en compte si la personne existe déjà mais n'est pas respo
         cur.execute("""
             INSERT INTO personne 
                 (nom, prenom, adresse_mail, fonction, id_hierarchie)
@@ -178,18 +179,6 @@ def insert_serie_temporelle(id_source_donnees, nom_inst, num_col, type_mesure):
 def insert_mesure(valeur_mesure, date_heure, description_mesure, statut,\
      num_col, nom_inst, existait_st, id_mesure_associee=None):
 
-    if existait_st:
-        # Vérifie que la mesure ne soit pas déjà dans la base
-        cur.execute("""
-            SELECT id_mesure FROM mesure
-                WHERE date_heure = %s;
-            """, (date_heure,))
-        id_mesure = cur.fetchone()
-        # Si la mesure existait déjà passe
-        if id_mesure != None:
-            print("TEST")
-            return
-
     # Recherche la serie_temporelle
     cur.execute("""
         SELECT id_st FROM serie_temporelle ST
@@ -202,6 +191,18 @@ def insert_mesure(valeur_mesure, date_heure, description_mesure, statut,\
         """, (num_col, nom_inst))
     id_st = cur.fetchone()
     id_st = id_st[0]
+
+    if existait_st:
+        # Vérifie que la mesure ne soit pas déjà dans la base
+        cur.execute("""
+            SELECT id_mesure FROM mesure
+                WHERE date_heure = %s AND id_st = %s;
+            """, (date_heure, id_st)) # Faire en fonction de l'instrument !!
+        id_mesure = cur.fetchone()
+        # Si la mesure existait déjà passe
+        if id_mesure != None:
+            #print("TEST")
+            return
     
     # Insère la mesure
     cur.execute("""
