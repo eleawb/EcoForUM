@@ -244,10 +244,12 @@ def integration_hobo(ficjson):
                         id_series_t.append(id_serie_temp)
 
                     #étape 1.4 : création des mesures
-                    cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    #cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, dateMesure, format_timestamp(dateMesure), id_serie_temp))
                     #print("insertion réussie de la mesure n°", ligne[0])
                     
-                    cur.execute("SELECT id_mesure FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s;", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    #cur.execute("SELECT id_mesure FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s;", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    cur.execute("SELECT id_mesure FROM mesure WHERE date_heure = to_timestamp(%s, %s) AND id_st = %s;", (dateMesure, format_timestamp(dateMesure), id_serie_temp))
                     id_mesure_bdd = cur.fetchone()[0]
 
                     #étape 1.5 : liaison coefficient correcteur et mesure
@@ -325,10 +327,12 @@ def integration_hobo(ficjson):
                         id_series_t.append(id_serie_temp)
                     """
                     #étape 2.3 : rentrer les mesures et les lier aux coefficients correcteurs
-                    cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    #cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    cur.execute("INSERT INTO mesure (valeur_mesure, date_heure, id_st) SELECT %s, to_timestamp(%s, %s), %s WHERE NOT EXISTS (SELECT 1 FROM mesure WHERE date_heure = to_timestamp(%s, %s) AND id_st = %s);", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp, dateMesure, format_timestamp(dateMesure), id_serie_temp))
                     #print("insertion réussie de la mesure n°", ligne[0])
                     
-                    cur.execute("SELECT id_mesure FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s;", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    #cur.execute("SELECT id_mesure FROM mesure WHERE valeur_mesure = %s AND date_heure = to_timestamp(%s, %s) AND id_st = %s;", (ligne[2], dateMesure, format_timestamp(dateMesure), id_serie_temp))
+                    cur.execute("SELECT id_mesure FROM mesure WHERE date_heure = to_timestamp(%s, %s) AND id_st = %s;", (dateMesure, format_timestamp(dateMesure), id_serie_temp))
                     id_mesure_bdd = cur.fetchone()[0]
 
                     #étape 1.5 : liaison coefficient correcteur et mesure

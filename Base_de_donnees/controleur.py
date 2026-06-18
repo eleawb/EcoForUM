@@ -2,6 +2,15 @@ import os
 import sys
 import subprocess
 import json
+import unicodedata
+
+"""
+Fonction qui prend en entrée une chaîne de caractères potentiellement accentuée et qui rend son équivalent sans accents
+@param texte : string (potentiellement accentuée)
+"""
+def supp_accents(texte):
+    sans_accents = unicodedata.normalize('NFD', texte) #NFD pour décomposer les lettres accentuées : "é" -> "e" et "´"
+    return ''.join(c for c in sans_accents if unicodedata.category(c) != 'Mn') #Mn correspond à la catégorie des caractères accentués
 
 def meta(choixScript, type_fichiers, fichiers, metaJson):
     """
@@ -17,11 +26,11 @@ def meta(choixScript, type_fichiers, fichiers, metaJson):
         choixScript = "verification"
     args = []
     for i in range(len(type_fichiers)):
-        match type_fichiers[i]:
+        match str(type_fichiers[i]).lower():
             case "personne":
                 args.append("--ficPers")
                 args.append(fichiers[i])
-            case "capteur":
+            case "instrument":
                 args.append("--ficInstr")
                 args.append(fichiers[i])
             case "projet":
@@ -32,7 +41,7 @@ def meta(choixScript, type_fichiers, fichiers, metaJson):
     try:
         retour = subprocess.run([sys.executable, f"../Base_de_donnees/{choixScript}_metadonnees.py"]+args, shell=True, capture_output=True, text=True, check=True)
         #Exécution du script en permettant de stocker la valeur de "retour"(les print)
-        print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
+        #print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
     except subprocess.CalledProcessError as e:
         print(json.dumps({"reussite":False, "commentaire":f"La commande de {choixScript} des metadonnees a echoue avec le code d'erreur : {e.returncode}", "stderr" : e.stderr, "stdout" : e.stdout}))
         #"Retour" de notre script si tout ne s'est pas bien passé
@@ -50,9 +59,9 @@ def nonMeta(choixScript, instrument, metaJson, cheminFichierMesure):
     @param metaJson : string, le chemin du fichier de mesure pour le supprimer si la réponse du script est négative
     """
     try:
-        retour = subprocess.run([sys.executable, "../Base_de_donnees/"+choixScript+ "_" + instrument.lower()+".py", metaJson], shell=True, capture_output=True, text=True, check=True)
+        retour = subprocess.run([sys.executable, "../Base_de_donnees/"+choixScript+ "_" + supp_accents(instrument.lower())+".py", metaJson], shell=True, capture_output=True, text=True, check=True)
         #éxécution du script en permettant de stocker la valeur de "retour"(les print)
-        #print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
+        print(retour.stdout)           #"Retour" de notre script si tout s'est bien passé
         retJson = json.loads(retour.stdout)
         if not retJson["reussite"]:
             try:
@@ -85,6 +94,6 @@ if __name__ == "__main__":
         if "metadonnees" in metadonnees["script"]:
             meta(metadonnees["script"], metadonnees["type_script"], metadonnees["fichier_donnees"], arg)
         else:
-            if metadonnees["nom_outil"].lower() in ["tms4", "dendrometre", "thermologger"]:
+            if supp_accents(metadonnees["nom_outil"].lower()) in ["tms4", "dendrometre", "thermologger"]:
                 metadonnees["nom_outil"] = "tomst"
             nonMeta(metadonnees["script"], metadonnees["nom_outil"], arg, metadonnees["chemin_source"])
