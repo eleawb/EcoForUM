@@ -109,237 +109,298 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
             row = row.tolist()
             #conversion des valeurs des cases vides (NaN -> None) car PostgreSQL ne comprend pas les NaN mais arrive à convertir les None en NULL
             row = [None if pd.isna(x) else x for x in row]
+            if row[2] != None and row[4] != None:
 
-            #requête à la base pour insèrer une personne
-            #ON CONFLICT (attribut) DO NOTHING sert à si on tente d'insérer un doublon et que l'on tombe sur une erreur due à une contrainte UNIQUE, on n'insère pas (on ne veut pas de doublons)
-            #cur.execute("INSERT INTO personne (nom, prenom, adresse_mail, fonction) VALUES (%s, %s, %s, %s) ON CONFLICT (adresse_mail) DO NOTHING;", (row[0], row[1], row[2], row[3]))
-            cur.execute("""INSERT INTO personne (nom, prenom, adresse_mail, fonction) SELECT %s, %s, %s, %s WHERE NOT EXISTS (SELECT 1 FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s));""", (row[0], row[1], row[2], row[3], row[2]))
-            #print("insertion d'une personne réussie")
-            #Si la 4ème colonne de l'onglet contient un 'Oui', on crée également un responsable fichier
-            if row[4].lower() == ("Oui").lower(): #on met les chaînes de caractère en minuscules pour tester leur égalité, ça évite la casse
-                #cur.execute("INSERT INTO responsable_fichier SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_responsable) DO NOTHING;", (row[2],))
-                cur.execute("INSERT INTO responsable_fichier SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) AND NOT EXISTS (SELECT 1 FROM responsable_fichier WHERE id_responsable = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)));", (row[2], row[2]))
-                #print("insertion d'un responsable fichier réussie")
+                #requête à la base pour insèrer une personne
+                #ON CONFLICT (attribut) DO NOTHING sert à si on tente d'insérer un doublon et que l'on tombe sur une erreur due à une contrainte UNIQUE, on n'insère pas (on ne veut pas de doublons)
+                #cur.execute("INSERT INTO personne (nom, prenom, adresse_mail, fonction) VALUES (%s, %s, %s, %s) ON CONFLICT (adresse_mail) DO NOTHING;", (row[0], row[1], row[2], row[3]))
+                cur.execute("""INSERT INTO personne (nom, prenom, adresse_mail, fonction) SELECT %s, %s, %s, %s WHERE NOT EXISTS (SELECT 1 FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s));""", (row[0], row[1], row[2], row[3], row[2]))
+                #print("insertion d'une personne réussie")
+                #Si la 4ème colonne de l'onglet contient un 'Oui', on crée également un responsable fichier
+                if row[4].lower() == ("Oui").lower(): #on met les chaînes de caractère en minuscules pour tester leur égalité, ça évite la casse
+                    #cur.execute("INSERT INTO responsable_fichier SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_responsable) DO NOTHING;", (row[2],))
+                    cur.execute("INSERT INTO responsable_fichier SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) AND NOT EXISTS (SELECT 1 FROM responsable_fichier WHERE id_responsable = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)));", (row[2], row[2]))
+                    #print("insertion d'un responsable fichier réussie")
 
     if ficInstr != None :
         #insère les instruments de mesure
         for index, row in dfInstr[onglets_Instr[0]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            #cur.execute("INSERT INTO instrument_mesure (num_instrument, modele, num_serie, nom_outil, pas_temps, fuseau_horaire, description_instrument, id_structure) SELECT %s, %s, %s, %s, %s, %s, %s, id_structure FROM structure_fichier WHERE lower(nom_instrument) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (num_instrument) DO NOTHING;", (row[1], row[2], row[0], row[3], row[4], row[5], row[6], row[3]))
-            cur.execute("""
-            INSERT INTO instrument_mesure (num_instrument, modele, num_serie, nom_outil, pas_temps, fuseau_horaire, description_instrument, id_structure) SELECT %s, %s, %s, %s, %s, %s, %s, s.id_structure FROM structure_fichier s WHERE lower(s.nom_instrument) IS NOT DISTINCT FROM lower(%s)
-            AND NOT EXISTS (SELECT 1 FROM instrument_mesure im WHERE im.num_instrument = %s
-            );""", (row[1], row[2], row[0], row[3], row[4], row[5], row[6], row[3], row[1]))
-            #print("insertion d'un instrument de mesure réussie")
+            if row[1] != None and row[3] != None :
+                #cur.execute("INSERT INTO instrument_mesure (num_instrument, modele, num_serie, nom_outil, pas_temps, fuseau_horaire, description_instrument, id_structure) SELECT %s, %s, %s, %s, %s, %s, %s, id_structure FROM structure_fichier WHERE lower(nom_instrument) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (num_instrument) DO NOTHING;", (row[1], row[2], row[0], row[3], row[4], row[5], row[6], row[3]))
+                cur.execute("""
+                INSERT INTO instrument_mesure (num_instrument, modele, num_serie, nom_outil, pas_temps, fuseau_horaire, description_instrument, id_structure) SELECT %s, %s, %s, %s, %s, %s, %s, s.id_structure FROM structure_fichier s WHERE lower(s.nom_instrument) IS NOT DISTINCT FROM lower(%s)
+                AND NOT EXISTS (SELECT 1 FROM instrument_mesure im WHERE lower(im.num_instrument) = lower(%s)
+                );""", (row[1], row[2], row[0], row[3], row[4], row[5], row[6], row[3], row[1]))
+                #print("insertion d'un instrument de mesure réussie")
 
         #insère les capteurs
         for index, row in dfInstr[onglets_Instr[1]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            #Pour insérer un capteur, il faut d'abord créer un capteur générique auquel il faudra le relier
-            #cur.execute("INSERT INTO capteur_generique (description) VALUES (%s) ON CONFLICT (description) DO NOTHING;", (row[2],))
-            cur.execute("""
-            INSERT INTO capteur_generique (description) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM capteur_generique WHERE lower(description) = lower(%s));
-            """, (row[2], row[2]))
-            #print("insertion d'un capteur générique réussie")
-            #Si la date que l'on a dans la case est de type date ou timestamp et pas string, il faut la convertir en string pour le bien des insert qui prennent des dates comme attributs car la fonction to_date de PostgreSQL n'aime que les string
-            date_act = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
+            if row[0] != None and row[3] != None and row[4] != None:
+                #Pour insérer un capteur, il faut d'abord créer un capteur générique auquel il faudra le relier
+                #cur.execute("INSERT INTO capteur_generique (description) VALUES (%s) ON CONFLICT (description) DO NOTHING;", (row[2],))
+                cur.execute("""
+                INSERT INTO capteur_generique (description) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM capteur_generique cg JOIN capteur c ON cg.id_capteur_generique = c.id_capteur JOIN instrument_mesure im ON c.id_instrument = im.id_instrument AND lower(im.num_instrument) = lower(%s) AND c.num_colonne = %s and lower(c.nom_capteur) = lower(%s)) RETURNING id_capteur_generique;
+                """, (row[2], row[0], row[3], row[4]))
 
-            #cur.execute("INSERT INTO capteur (id_capteur, date_activation, id_instrument, num_colonne) SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), %s ON CONFLICT (id_capteur) DO NOTHING;", (row[2], date_act, format_date(row[1]), row[0], row[3]))
-            cur.execute("""
-            INSERT INTO capteur (id_capteur, date_activation, id_instrument, num_colonne) SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), %s
-            WHERE NOT EXISTS (SELECT 1 FROM capteur c WHERE c.id_capteur = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            );
-            """, (row[2], date_act, format_date(row[1]), row[0], row[3], row[2]))
-            #print("insertion d'un capteur réussie")
+                #cur.execute("""
+                #SELECT id_capteur_generique FROM capteur_generique WHERE id_capteur_generique = (SELECT id_capteur FROM capteur c JOIN instrument_mesure im ON c.id_instrument = im.id_instrument AND lower(im.num_instrument) = lower(%s) AND c.num_colonne = %s and lower(c.nom_capteur) = lower(%s))
+                #""", (row[0], row[3], row[4]))
+                
+                result = cur.fetchone()
+                id_capt_gen = result[0] if result else None
+                #print("insertion d'un capteur générique réussie")
+                #Si la date que l'on a dans la case est de type date ou timestamp et pas string, il faut la convertir en string pour le bien des insert qui prennent des dates comme attributs car la fonction to_date de PostgreSQL n'aime que les string
+                date_act = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
+
+                #cur.execute("INSERT INTO capteur (id_capteur, date_activation, id_instrument, num_colonne) SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), %s ON CONFLICT (id_capteur) DO NOTHING;", (row[2], date_act, format_date(row[1]), row[0], row[3]))
+                cur.execute("""
+                INSERT INTO capteur (id_capteur, date_activation, id_instrument, num_colonne, nom_capteur) SELECT %s, to_date(%s, %s), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), %s, %s
+                WHERE %s IS NOT NULL
+                AND (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM capteur c WHERE c.id_capteur = %s
+                );
+                """, (id_capt_gen, date_act, format_date(row[1]), row[0], row[3], row[4], id_capt_gen, row[0], id_capt_gen))
+                #print("insertion d'un capteur réussie")
 
         #insère les remplacements des instruments/capteurs
         for index, row in dfInstr[onglets_Instr[2]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            date_rempl = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
+            if row[0] != None and row[1] != None and row[4] != None:
+                date_rempl = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
 
-            if row[4].lower() == "i":
-                #cur.execute("INSERT INTO remplacement_instrument (id_instrument, id_nouvel_instrument, date_remplacement, raison_remplacement) SELECT (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s ON CONFLICT (id_instrument, id_nouvel_instrument) DO NOTHING;", (row[0], row[1], date_rempl, format_date(row[2]), row[3]))
-                cur.execute("""
-                INSERT INTO remplacement_instrument (id_instrument, id_nouvel_instrument, date_remplacement, raison_remplacement)
-                SELECT (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s
-                WHERE NOT EXISTS (SELECT 1 FROM remplacement_instrument r WHERE r.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) AND r.id_nouvel_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
-                );
-                """, (row[0], row[1], date_rempl, format_date(row[2]), row[3], row[0], row[1]))
-                #print("insertion de remplacement instrument réussie")
-            elif row[4].lower() == "c":
-                #cur.execute("INSERT INTO remplacement_capteur (id_capteur, id_nouveau_capteur, date_remplacement, raison_remplacement) SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s ON CONFLICT (id_capteur, id_nouveau_capteur) DO NOTHING;", (row[0], row[1], date_rempl, format_date(row[2]), row[3]))
-                cur.execute("""
-                INSERT INTO remplacement_capteur (id_capteur, id_nouveau_capteur, date_remplacement, raison_remplacement)
-                SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s
-                WHERE NOT EXISTS (SELECT 1 FROM remplacement_capteur rc WHERE rc.id_capteur = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) AND rc.id_nouveau_capteur = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-                );
-                """, (row[0], row[1], date_rempl, format_date(row[2]), row[3], row[0], row[1]))
-                #print("insertion de remplacement capteur réussie")
+                if row[4].lower() == "i":
+                    #cur.execute("INSERT INTO remplacement_instrument (id_instrument, id_nouvel_instrument, date_remplacement, raison_remplacement) SELECT (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s ON CONFLICT (id_instrument, id_nouvel_instrument) DO NOTHING;", (row[0], row[1], date_rempl, format_date(row[2]), row[3]))
+                    cur.execute("""
+                    INSERT INTO remplacement_instrument (id_instrument, id_nouvel_instrument, date_remplacement, raison_remplacement)
+                    SELECT (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s
+                    WHERE (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                    AND (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM remplacement_instrument r WHERE r.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) AND r.id_nouvel_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
+                    );
+                    """, (row[0], row[1], date_rempl, format_date(row[2]), row[3], row[0], row[1], row[0], row[1]))
+                    #print("insertion de remplacement instrument réussie")
+                elif row[4].lower() == "c":
+                    #cur.execute("INSERT INTO remplacement_capteur (id_capteur, id_nouveau_capteur, date_remplacement, raison_remplacement) SELECT (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), %s ON CONFLICT (id_capteur, id_nouveau_capteur) DO NOTHING;", (row[0], row[1], date_rempl, format_date(row[2]), row[3]))
+                    cur.execute("""
+                    INSERT INTO remplacement_capteur (id_capteur, id_nouveau_capteur, date_remplacement, raison_remplacement)
+                    SELECT (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)), (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)), to_date(%s, %s), %s
+                    WHERE (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)) IS NOT NULL
+                    AND (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM remplacement_capteur rc WHERE rc.id_capteur = (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)) AND rc.id_nouveau_capteur = (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s))
+                    );
+                    """, (row[0], row[1], date_rempl, format_date(row[2]), row[3], row[0], row[1], row[0], row[1]))
+                    #print("insertion de remplacement capteur réussie")
 
         #insère les coefficients correcteurs des capteurs
         for index, row in dfInstr[onglets_Instr[3]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            date_cal = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
-            #cur.execute("INSERT INTO coefficient_correcteur (valeur, date_calibration, id_capteur) SELECT %s, to_date(%s, %s), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (date_calibration, id_capteur) DO NOTHING;", (row[0], date_cal, format_date(row[1]), row[2]))
-            cur.execute("""
-            INSERT INTO coefficient_correcteur (valeur, date_calibration, id_capteur) SELECT %s, to_date(%s, %s), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            WHERE NOT EXISTS (SELECT 1 FROM coefficient_correcteur cc WHERE cc.date_calibration = to_date(%s, %s) AND cc.id_capteur = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            );
-            """, (row[0], date_cal, format_date(row[1]), row[2], date_cal, format_date(row[1]), row[2]))
-            #print("insertion de coefficient capteur réussie")
+            if row[0] != None and row[1] != None and row[2] != None :
+                date_cal = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
+                #cur.execute("INSERT INTO coefficient_correcteur (valeur, date_calibration, id_capteur) SELECT %s, to_date(%s, %s), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (date_calibration, id_capteur) DO NOTHING;", (row[0], date_cal, format_date(row[1]), row[2]))
+                cur.execute("""
+                INSERT INTO coefficient_correcteur (valeur, date_calibration, id_capteur) SELECT %s, to_date(%s, %s), (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s))
+                WHERE (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM coefficient_correcteur cc WHERE cc.date_calibration = to_date(%s, %s) AND cc.id_capteur = (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s))
+                );
+                """, (row[0], date_cal, format_date(row[1]), row[2], row[2], date_cal, format_date(row[1]), row[2]))
+                #print("insertion de coefficient capteur réussie")
 
         #insère les maintenances capteur
         for index, row in dfInstr[onglets_Instr[4]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            date_deb = row[0].strftime("%Y-%m-%d") if hasattr(row[0], "strftime") else row[0]
-            date_fin = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
-            #le WHERE NOT EXISTS permet de vérifier avant d'insérer que le ligne n'existe pas déjà, qu'il ne va pas y avoir de doublon. C'est l'équivalent au ON CONFLICT ... DO NOTHING sauf que lui peut s'appliquer sans qu'il y ait une contraine UNIQUE
-            cur.execute("""INSERT INTO maintenance_capteur (date_debut, date_fin, description, id_capteur) SELECT to_date(%s, %s), to_date(%s, %s), %s, (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            WHERE NOT EXISTS (SELECT 1 FROM maintenance_capteur WHERE date_debut = to_date(%s, %s) AND date_fin = to_date(%s, %s) AND description IS NOT DISTINCT FROM %s AND id_capteur = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)))
-            ;""", (date_deb, format_date(row[0]), date_fin, format_date(row[1]), row[2], row[3], date_deb, format_date(row[0]), date_fin, format_date(row[1]), row[2], row[3]))
-            #print("insertion de maintenance capteur réussie")
+            if row[0] != None and row[3] != None :
+                date_deb = row[0].strftime("%Y-%m-%d") if hasattr(row[0], "strftime") else row[0]
+                date_fin = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
+                #le WHERE NOT EXISTS permet de vérifier avant d'insérer que le ligne n'existe pas déjà, qu'il ne va pas y avoir de doublon. C'est l'équivalent au ON CONFLICT ... DO NOTHING sauf que lui peut s'appliquer sans qu'il y ait une contraine UNIQUE
+                cur.execute("""INSERT INTO maintenance_capteur (date_debut, date_fin, description, id_capteur) SELECT to_date(%s, %s), to_date(%s, %s), %s, (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s))
+                WHERE (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM maintenance_capteur WHERE date_debut = to_date(%s, %s) AND date_fin = to_date(%s, %s) AND description IS NOT DISTINCT FROM %s AND id_capteur = (SELECT id_capteur FROM capteur WHERE lower(nom_capteur) = lower(%s)))
+                ;""", (date_deb, format_date(row[0]), date_fin, format_date(row[1]), row[2], row[3], row[3], date_deb, format_date(row[0]), date_fin, format_date(row[1]), row[2], row[3]))
+                #print("insertion de maintenance capteur réussie")
 
     if ficPers != None :
         #insère les référents instrument et les collecteurs
         for index, row in dfPers[onglets_Pers[1]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
+            if row[0] != None and row[1] != None and row[2] != None:
 
-            if row[2].lower() == "r" :
-                #cur.execute("INSERT INTO referent_instrument (id_referent) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_referent) DO NOTHING;", (row[0],))
-                cur.execute("""
-                INSERT INTO referent_instrument (id_referent) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) AND NOT EXISTS (SELECT 1 FROM referent_instrument r WHERE r.id_referent = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
-                );
+                if row[2].lower() == "r" :
+                    #cur.execute("INSERT INTO referent_instrument (id_referent) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_referent) DO NOTHING;", (row[0],))
+                    cur.execute("""
+                    INSERT INTO referent_instrument (id_referent) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) 
+                    AND (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM referent_instrument r WHERE r.id_referent = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
+                    );
 
-                """, (row[0], row[0]))
-                #print("insertion de référent instrument réussie")
+                    """, (row[0], row[0], row[0]))
+                    #print("insertion de référent instrument réussie")
 
-                date_deb = row[3].strftime("%Y-%m-%d") if hasattr(row[3], "strftime") else row[3]
-                date_fin = row[4].strftime("%Y-%m-%d") if hasattr(row[4], "strftime") else row[4]
+                    date_deb = row[3].strftime("%Y-%m-%d") if hasattr(row[3], "strftime") else row[3]
+                    date_fin = row[4].strftime("%Y-%m-%d") if hasattr(row[4], "strftime") else row[4]
+                    
+                    if row[3] != None :
 
-                #cur.execute("INSERT INTO est_referent_de (id_referent, id_instrument, date_debut, date_fin) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), to_date(%s, %s) ON CONFLICT (id_referent, id_instrument, date_debut) DO NOTHING;", (row[0], row[1], date_deb, format_date(row[3]), date_fin, format_date(row[4])))
-                cur.execute("""
-                INSERT INTO est_referent_de (id_referent, id_instrument, date_debut, date_fin)
-                SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), to_date(%s, %s)
-                WHERE NOT EXISTS (SELECT 1 FROM est_referent_de er WHERE er.id_referent = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
-                AND er.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
-                AND er.date_debut = to_date(%s, %s)
-                );
-                """, (row[0], row[1], date_deb, format_date(row[3]), date_fin, format_date(row[4]), row[0], row[1], date_deb, format_date(row[3])))
-                #print("insertion de est_referent_de réussie")
+                        #cur.execute("INSERT INTO est_referent_de (id_referent, id_instrument, date_debut, date_fin) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), to_date(%s, %s) ON CONFLICT (id_referent, id_instrument, date_debut) DO NOTHING;", (row[0], row[1], date_deb, format_date(row[3]), date_fin, format_date(row[4])))
+                        cur.execute("""
+                        INSERT INTO est_referent_de (id_referent, id_instrument, date_debut, date_fin)
+                        SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)), to_date(%s, %s), to_date(%s, %s)
+                        WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL AND (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                        AND NOT EXISTS (SELECT 1 FROM est_referent_de er WHERE er.id_referent = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
+                        AND er.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
+                        AND er.date_debut = to_date(%s, %s)
+                        );
+                        """, (row[0], row[1], date_deb, format_date(row[3]), date_fin, format_date(row[4]), row[0], row[1], row[0], row[1], date_deb, format_date(row[3])))
+                        #print("insertion de est_referent_de réussie")
 
-            elif row[2].lower() == "c" :
-                #cur.execute("INSERT INTO collecteur (id_collecteur) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_collecteur) DO NOTHING;", (row[0],))
-                cur.execute("""
-                INSERT INTO collecteur (id_collecteur) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) AND NOT EXISTS (SELECT 1 FROM collecteur c WHERE c.id_collecteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
-                );
-                """, (row[0], row[0]))
-                #print("insertion de collecteur réussie")
+                elif row[2].lower() == "c" :
+                    #cur.execute("INSERT INTO collecteur (id_collecteur) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) ON CONFLICT (id_collecteur) DO NOTHING;", (row[0],))
+                    cur.execute("""
+                    INSERT INTO collecteur (id_collecteur) SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s) 
+                    AND (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM collecteur c WHERE c.id_collecteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
+                    );
+                    """, (row[0], row[0], row[0]))
+                    #print("insertion de collecteur réussie")
 
-                #cur.execute("INSERT INTO collecte_instrument (id_collecteur, id_instrument) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (id_collecteur, id_instrument) DO NOTHING;", (row[0], row[1]))
-                cur.execute("""
-                INSERT INTO collecte_instrument (id_collecteur, id_instrument) SELECT
-                (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
-                WHERE NOT EXISTS (SELECT 1 FROM collecte_instrument ci WHERE ci.id_collecteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
-                AND ci.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
-                );
-                """, (row[0], row[1], row[0], row[1]))
-                #print("insertion de collecte_instrument réussie")
+                    #cur.execute("INSERT INTO collecte_instrument (id_collecteur, id_instrument) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (id_collecteur, id_instrument) DO NOTHING;", (row[0], row[1]))
+                    cur.execute("""
+                    INSERT INTO collecte_instrument (id_collecteur, id_instrument) SELECT
+                    (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
+                    WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL AND (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM collecte_instrument ci WHERE ci.id_collecteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
+                    AND ci.id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s))
+                    );
+                    """, (row[0], row[1], row[0], row[1], row[0], row[1]))
+                    #print("insertion de collecte_instrument réussie")
 
         #insère les récolteurs
         for index, row in dfPers[onglets_Pers[2]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            #Comme pour les capteurs, il faut aussi d'abord créer un capteur générique avant d'insérer un récolteur
-            #cur.execute("INSERT INTO capteur_generique (description) VALUES (%s) ON CONFLICT (description) DO NOTHING;", (row[1],))
-            cur.execute("""
-            INSERT INTO capteur_generique (description) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM capteur_generique cg WHERE cg.description = %s
-            );
-            """, (row[1], row[1]))
-            #cur.execute("INSERT INTO recolteur (id_recolteur, id_capteur_generique) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (id_recolteur, id_capteur_generique) DO NOTHING;", (row[0], row[1]))
-            cur.execute("""
-            INSERT INTO recolteur (id_recolteur, id_capteur_generique) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            WHERE NOT EXISTS (SELECT 1 FROM recolteur r WHERE r.id_recolteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
-            AND r.id_capteur_generique = (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s))
-            );
-            """, (row[0], row[1], row[0], row[1]))
-            #print("insertion de récolteur réussie")
+            if row[0] != None :
+                #Comme pour les capteurs, il faut aussi d'abord créer un capteur générique avant d'insérer un récolteur
+                #cur.execute("INSERT INTO capteur_generique (description) VALUES (%s) ON CONFLICT (description) DO NOTHING;", (row[1],))
+                
+                cur.execute("""
+                INSERT INTO capteur_generique (description) SELECT %s 
+                WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT id_capteur_generique FROM recolteur r JOIN Personne p ON r.id_recolteur = p.id_personne WHERE lower(adresse_mail) = lower(%s)) RETURNING id_capteur_generique;
+                """, (row[1], row[0], row[0]))
+
+
+
+                #cur.execute("""
+                #SELECT id_capteur_generique FROM capteur_generique WHERE id_capteur_generique = (SELECT id_capteur_generique FROM recolteur r JOIN Personne p ON r.id_recolteur = p.id_personne WHERE lower(adresse_mail) = lower(%s))
+                #""", (row[0],))
+
+                result = cur.fetchone()
+                id_capt_gen = result[0] if result else None
+                #print("insertion d'un capteur générique réussie")
+
+                #cur.execute("INSERT INTO recolteur (id_recolteur, id_capteur_generique) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT (id_recolteur, id_capteur_generique) DO NOTHING;", (row[0], row[1]))
+                cur.execute("""
+                INSERT INTO recolteur (id_recolteur, id_capteur_generique) SELECT (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), %s
+                WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)) IS NOT NULL
+                AND %s IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM recolteur r WHERE r.id_recolteur = (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s))
+                AND r.id_capteur_generique = %s
+                );
+                """, (row[0], id_capt_gen, row[0], id_capt_gen, row[0], id_capt_gen))
+                #print("insertion de récolteur réussie")
 
         #insère les groupes
         for index, row in dfPers[onglets_Pers[3]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            cur.execute("INSERT INTO groupe (nom_groupe) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM groupe WHERE lower(nom_groupe) IS NOT DISTINCT FROM lower(%s));", (row[0], row[0]))
+            if row[0] != None and row[1] != None :
+                cur.execute("INSERT INTO groupe (nom_groupe) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM groupe WHERE lower(nom_groupe) IS NOT DISTINCT FROM lower(%s));", (row[0], row[0]))
 
-            #insère les membres du groupe
-            cur.execute("INSERT INTO membre_groupe (id_groupe, id_personne) SELECT (SELECT id_groupe FROM groupe WHERE lower(nom_groupe) = lower(%s)), (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)) WHERE NOT EXISTS (SELECT 1 FROM membre_groupe WHERE id_groupe = (SELECT id_groupe FROM groupe WHERE lower(nom_groupe) = lower(%s)) AND id_personne = (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)));", (row[0], row[1], row[0], row[1]))
+                #insère les membres du groupe
+                cur.execute("""INSERT INTO membre_groupe (id_groupe, id_personne) SELECT (SELECT id_groupe FROM groupe WHERE lower(nom_groupe) = lower(%s)), (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)) 
+                WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM membre_groupe WHERE id_groupe = (SELECT id_groupe FROM groupe WHERE lower(nom_groupe) = lower(%s)) AND id_personne = (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)));""", (row[0], row[1], row[1], row[0], row[1]))
 
     if ficInstr != None :
         #insère localisation
         for index, row in dfInstr[onglets_Instr[5]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
+            if row[0] != None and row[1] != None and row[4] != None and row[5] != None :
 
-            cur.execute("INSERT INTO milieu_specifique (categorie, description_milieu) SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM milieu_specifique WHERE lower(categorie) = lower(%s) AND lower(description_milieu) = lower(%s));", (row[9], row[10], row[9], row[10]))
-            #print("insertion de milieu spécifique réussie")
+                cur.execute("INSERT INTO milieu_specifique (categorie, description_milieu) SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM milieu_specifique WHERE lower(categorie) = lower(%s) AND lower(description_milieu) = lower(%s));", (row[9], row[10], row[9], row[10]))
+                #print("insertion de milieu spécifique réussie")
 
-            cur.execute("""INSERT INTO localisation (altitude, longitude, latitude, pente, hauteur, orientation, id_milieu) SELECT %s, %s, %s, %s, %s, %s, (SELECT id_milieu FROM milieu_specifique WHERE lower(description_milieu) IS NOT DISTINCT FROM lower(%s) AND lower(categorie) IS NOT DISTINCT FROM lower(%s) LIMIT 1)
-            WHERE NOT EXISTS (SELECT 1 FROM localisation WHERE altitude IS NOT DISTINCT FROM %s AND longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s
-            AND id_milieu = (SELECT id_milieu FROM milieu_specifique WHERE lower(description_milieu) IS NOT DISTINCT FROM lower(%s) AND lower(categorie) IS NOT DISTINCT FROM lower(%s) LIMIT 1))
-            ;""", (row[3], row[4], row[5], row[6], row[7], row[8], row[10], row[9], row[3], row[4], row[5], row[6], row[7], row[8], row[10], row[9]))
-            #print("insertion de localisation réussie")
+                cur.execute("""INSERT INTO localisation (altitude, longitude, latitude, pente, hauteur, orientation, id_milieu) SELECT %s, %s, %s, %s, %s, %s, (SELECT id_milieu FROM milieu_specifique WHERE lower(description_milieu) IS NOT DISTINCT FROM lower(%s) AND lower(categorie) IS NOT DISTINCT FROM lower(%s) LIMIT 1)
+                WHERE 
+                NOT EXISTS (SELECT 1 FROM localisation WHERE altitude IS NOT DISTINCT FROM %s AND longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s
+                AND id_milieu = (SELECT id_milieu FROM milieu_specifique WHERE lower(description_milieu) IS NOT DISTINCT FROM lower(%s) AND lower(categorie) IS NOT DISTINCT FROM lower(%s) LIMIT 1))
+                ;""", (row[3], row[4], row[5], row[6], row[7], row[8], row[10], row[9], row[3], row[4], row[5], row[6], row[7], row[8], row[10], row[9]))
+                #print("insertion de localisation réussie")
 
-            #on récupère tous les capteurs qui sont liés à l'instrument de mesure cité dans la ligne
-            #print(row[0])
-            cur.execute("SELECT id_capteur FROM capteur JOIN instrument_mesure im ON im.id_instrument = capteur.id_instrument WHERE lower(im.num_instrument) IS NOT DISTINCT FROM lower(%s);", (row[0],))
-            capteurs = cur.fetchall()
-            #print(capteurs)
-            #pour chaque capteur associé à un instrument, on associe la bonne localisation. (dans notre .xlsx, la localisation est associée à un instrument et pas un capteur alors que dans notre modèle EA c'est l'inverse) 
-            for c in capteurs:
-                date_deb = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
-                date_fin = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
-                #cur.execute("INSERT INTO capteur_localise (id_capteur_gen, id_loc, date_debut, date_fin) SELECT %s, (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1), to_date(%s, %s), to_date(%s, %s) ON CONFLICT (id_capteur_gen, id_loc, date_debut) DO NOTHING;", (c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1]), date_fin, format_date(row[2])))
-                cur.execute("""
-                INSERT INTO capteur_localise (id_capteur_gen, id_loc, date_debut, date_fin) SELECT %s,
-                (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1), to_date(%s, %s), to_date(%s, %s)
-                WHERE NOT EXISTS (SELECT 1 FROM capteur_localise cl WHERE cl.id_capteur_gen = %s AND cl.id_loc = (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1)
-                AND cl.date_debut = to_date(%s, %s)
-                );
-                """, (c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1]), date_fin, format_date(row[2]), c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1])))
-                #print("insertion de capteur localisé réussie")
+                #on récupère tous les capteurs qui sont liés à l'instrument de mesure cité dans la ligne
+                #print(row[0])
+                cur.execute("SELECT id_capteur FROM capteur JOIN instrument_mesure im ON im.id_instrument = capteur.id_instrument WHERE lower(im.num_instrument) IS NOT DISTINCT FROM lower(%s);", (row[0],))
+                capteurs = cur.fetchall()
+                #print(capteurs)
+                #pour chaque capteur associé à un instrument, on associe la bonne localisation. (dans notre .xlsx, la localisation est associée à un instrument et pas un capteur alors que dans notre modèle EA c'est l'inverse) 
+                for c in capteurs: #normalement pas de problème avec la violation de contrainte not null car si l'instrument est pas dans la base, le fetchall renverra une liste vide
+                    date_deb = row[1].strftime("%Y-%m-%d") if hasattr(row[1], "strftime") else row[1]
+                    date_fin = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
+                    #cur.execute("INSERT INTO capteur_localise (id_capteur_gen, id_loc, date_debut, date_fin) SELECT %s, (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1), to_date(%s, %s), to_date(%s, %s) ON CONFLICT (id_capteur_gen, id_loc, date_debut) DO NOTHING;", (c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1]), date_fin, format_date(row[2])))
+                    cur.execute("""
+                    INSERT INTO capteur_localise (id_capteur_gen, id_loc, date_debut, date_fin) SELECT %s,
+                    (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1), to_date(%s, %s), to_date(%s, %s)
+                    WHERE NOT EXISTS (SELECT 1 FROM capteur_localise cl WHERE cl.id_capteur_gen = %s AND cl.id_loc = (SELECT id_localisation FROM localisation WHERE longitude IS NOT DISTINCT FROM %s AND latitude IS NOT DISTINCT FROM %s AND pente IS NOT DISTINCT FROM %s AND orientation IS NOT DISTINCT FROM %s AND altitude IS NOT DISTINCT FROM %s AND hauteur IS NOT DISTINCT FROM %s LIMIT 1)
+                    AND cl.date_debut = to_date(%s, %s)
+                    );
+                    """, (c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1]), date_fin, format_date(row[2]), c[0], row[4], row[5], row[6], row[8], row[3], row[7], date_deb, format_date(row[1])))
+                    #print("insertion de capteur localisé réussie")
     if ficProj != None :
         #insère les projets
         for index, row in dfProj[onglets_Proj[0]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
-            date_deb = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
-            date_fin = row[3].strftime("%Y-%m-%d") if hasattr(row[3], "strftime") else row[3]
-            cur.execute("""INSERT INTO projet (nom_projet, id_responsable_projet, date_debut, date_fin) SELECT %s, (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)), to_date(%s, %s), to_date(%s, %s)
-            WHERE NOT EXISTS (SELECT 1 FROM projet WHERE lower(nom_projet) = lower(%s))
-            ;""", (row[0], row[1], date_deb, format_date(row[2]), date_fin, format_date(row[3]), row[0]))
-            #print("insertion de projet réussie")
+            if row[0] != None and row[1] != None : 
+                date_deb = row[2].strftime("%Y-%m-%d") if hasattr(row[2], "strftime") else row[2]
+                date_fin = row[3].strftime("%Y-%m-%d") if hasattr(row[3], "strftime") else row[3]
+                cur.execute("""INSERT INTO projet (nom_projet, id_responsable_projet, date_debut, date_fin) SELECT %s, (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)), to_date(%s, %s), to_date(%s, %s)
+                WHERE (SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s)) IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM projet WHERE lower(nom_projet) = lower(%s))
+                ;""", (row[0], row[1], date_deb, format_date(row[2]), date_fin, format_date(row[3]), row[1], row[0]))
+                #print("insertion de projet réussie")
 
         #insère les association des récolteurs et des instruments associés à des projets
         #Double ou triple boucle for car il faut aller chercher les infos dans différents onglets voire différents fichiers
         for index, row in dfProj[onglets_Proj[1]].iterrows():
             row = row.tolist()
             row = [None if pd.isna(x) else x for x in row]
+            if row[0] != None and row[1] != None and row[2] != None:
 
-            if row[2].lower() == "i": #insertion des instruments en rapport avec le projet
-                cur.execute("INSERT INTO instrument_projet (id_projet, id_instrument) SELECT (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s) LIMIT 1) WHERE NOT EXISTS (SELECT 1 FROM instrument_projet WHERE id_projet = (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1) AND id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s) LIMIT 1));", (row[1], row[0], row[1], row[0]))
+                if row[2].lower() == "i": #insertion des instruments en rapport avec le projet
+                    cur.execute("""INSERT INTO instrument_projet (id_projet, id_instrument) SELECT (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1), (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s) LIMIT 1) 
+                    WHERE (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s) LIMIT 1) IS NOT NULL 
+                    AND (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM instrument_projet WHERE id_projet = (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1) AND id_instrument = (SELECT id_instrument FROM instrument_mesure WHERE lower(num_instrument) IS NOT DISTINCT FROM lower(%s) LIMIT 1))
+                    ;""", (row[1], row[0], row[0], row[1], row[1], row[0]))
 
-            elif row[2].lower() == "r" : #insertion des recolteurs en rapport avec le projet
-                cur.execute("""INSERT INTO membre_projet (id_projet, id_recolteur, id_capteur_generique) SELECT (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1), (SELECT id_recolteur FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s)), (SELECT id_capteur_generique FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
-                WHERE NOT EXISTS (SELECT 1 FROM membre_projet WHERE id_projet = (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1)
-                AND id_recolteur = (SELECT id_recolteur FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
-                AND id_capteur_generique = (SELECT id_capteur_generique FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
-                )
-                ;""", (row[1], row[0], row[0], row[1], row[0], row[0]))
+                elif row[2].lower() == "r" : #insertion des recolteurs en rapport avec le projet
+                    cur.execute("""INSERT INTO membre_projet (id_projet, id_recolteur, id_capteur_generique) SELECT (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1), (SELECT id_recolteur FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s)), (SELECT id_capteur_generique FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
+                    WHERE (SELECT id_recolteur FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s)) IS NOT NULL
+                    AND (SELECT id_capteur_generique FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s)) IS NOT NULL
+                    AND (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1) IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM membre_projet WHERE id_projet = (SELECT id_projet FROM projet WHERE lower(nom_projet) IS NOT DISTINCT FROM lower(%s) LIMIT 1)
+                    AND id_recolteur = (SELECT id_recolteur FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
+                    AND id_capteur_generique = (SELECT id_capteur_generique FROM recolteur JOIN personne ON id_personne = id_recolteur WHERE lower(adresse_mail) = lower(%s))
+                    )
+                    ;""", (row[1], row[0], row[0], row[0], row[0], row[1], row[1], row[0], row[0]))
 
 
     """
@@ -420,7 +481,7 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
 
             cur.execute("INSERT INTO source_donnees (extension, nom_source, chemin_source, date_import, commentaire, id_responsable, type_source) VALUES (%s, %s, %s, to_timestamp(%s, %s), %s, %s, %s);", (ext, nom_fic, chemin_fic, data["date_import"], format_timestamp(data["date_import"]), data["commentaire"], id_responsable_fic, "fichier_métadonnées_"+type_fic))
 
-
+#if cur.rowcount == 0 : -> l'insertion ne s'est pas passée
     dico["commentaire"] = ""
     dico["reussite"] = True
     print(json.dumps(dico))
