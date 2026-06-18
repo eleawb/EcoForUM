@@ -677,23 +677,165 @@ app.get('/api/responsables', async (req, res) => {
     }
 })
 
+// Route pour récupérer toutes les personnes
+app.get('/api/personnes', async (req, res) => {
+    try {
+        const result = await client.query(`SELECT 
+                id_personne,
+                nom,
+                prenom,
+                adresse_mail
+            FROM personne 
+            ORDER BY nom ASC`)
+        res.json(result.rows)
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
 
+// Route pour récupérer toutes les personnes qui ne sont pas des responsables_fichier
+app.get('/api/personnesPasRespo', async (req, res) => {
+    try {
+        const result = await client.query(`SELECT 
+                id_personne,
+                nom,
+                prenom,
+                adresse_mail
+            FROM personne 
+            WHERE id_personne NOT IN (
+                SELECT p.id_personne
+                FROM responsable_fichier rf
+                JOIN personne p ON rf.id_responsable = p.id_personne
+            )
+            ORDER BY nom ASC`)
+        res.json(result.rows)
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
+
+//Route pour tester si une adresse mail est déjà présente ou non dans la base
+app.post('/api/verifMailPersonne', async (req, res) => {
+    const { mail } = req.body
+    
+    try {
+      let personne;
+      let nom_personne = "";
+      let prenom_personne = "";
+      let fonction = "";
+      let encadrant;
+      let nom_encadrant = "";
+      let prenom_encadrant = "";
+      let mail_encadrant = "";
+      let estPresent = false;
+      let aEncadrant = false;
+      let estDejaResponsable = false;
+
+      // Cherche l'encadrant de la personne
+      const result1 = await client.query(
+        `SELECT nom, prenom, fonction, id_hierarchie, id_personne FROM personne
+        WHERE adresse_mail = $1`,
+        [mail]
+      )
+      
+      // S'il est déjà une personne possédant ce mail
+      if (result1.rowCount > 0){
+        personne = result1.rows[0];
+        //console.log(personne);
+        estPresent = true;
+        nom_personne = personne.nom;
+        prenom_personne = personne.prenom;
+        fonction = personne.fonction;
+
+        // Vérifie s'il est déjà responsable ou non 
+        const result2 = await client.query(
+            `SELECT * FROM responsable_fichier
+            WHERE id_responsable = $1`,
+            [personne.id_personne]
+          )
+        if (result2.rowCount > 0){
+            console.log(result2)
+            estDejaResponsable = true;
+        }
+
+        // Va chercher son encadrant si la personne en a un
+        if (personne.id_hierarchie != null){
+            const result3 = await client.query(
+                `SELECT adresse_mail, nom, prenom FROM personne
+                WHERE id_personne = $1`,
+                [personne.id_hierarchie]
+            )
+
+            encadrant = result3.rows[0];
+            console.log(encadrant);
+            aEncadrant = true;
+            nom_encadrant = encadrant.nom;
+            prenom_encadrant = encadrant.prenom;
+            mail_encadrant = encadrant.adresse_mail;
+        }
+      }
+
+      res.status(201).json({ 
+        message: "Mail déjà utilisé pour une personne", 
+        estPresent: estPresent,
+        aEncadrant: aEncadrant,
+        estDejaResponsable: estDejaResponsable,
+
+        nom_personne: nom_personne,
+        prenom_personne: prenom_personne,
+        fonction: fonction,
+
+        nom_encadrant: nom_encadrant,
+        prenom_encadrant: prenom_encadrant,
+        mail_encadrant: mail_encadrant
+      })
+    } catch (error) {
+      res.status(500).json({ 
+        message: error.message
+    })
+    }
+  })
 
 
 //Route pour la creation de nouveau responsable fichiers
 //Envoi des information du form pour la creation d-un nouveau responable_fichier
 app.post('/api/responsable_fichier', async (req, res) => {
-  const { nom, prenom, email, fonction } = req.body
+  const { nom, prenom, mail, fonction, encadrant, estDejaPersonne } = req.body
   
   try {
-    // Insertion de la nouvelle personne cree
-    const result = await client.query(
-      `INSERT INTO personne (nom, prenom, adresse_mail, fonction)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id_personne`,
-      [nom, prenom, email, fonction]
+    let id_encadrant = null;
+
+    // Si le mail n'appartient pas déjà à une personne
+    if (!estDejaPersonne){
+        // Si un encadrant a été saisie
+        if (encadrant != ''){
+            // Cherche l'encadrant de la personne
+            const result1 = await client.query(
+                `SELECT id_personne FROM personne
+                WHERE adresse_mail = $1`,
+                [encadrant]
+            )
+            // N'est pas censé renvoyer une erreur car l'encadrant est choisi 
+            // dans un select
+            id_encadrant = result1.rows[0].id_personne
+        }
+
+        // Insertion de la nouvelle personne si elle n'existe pas déjà
+        await client.query(
+        `INSERT INTO personne (nom, prenom, adresse_mail, fonction, id_hierarchie)
+            SELECT $1, $2, $3::text, $4, $5 WHERE NOT EXISTS (
+                SELECT * FROM personne WHERE lower(adresse_mail) = lower($3::text)
+            )`,
+        [nom, prenom, mail, fonction, id_encadrant]
+        )
+    }
+    
+    const result2 = await client.query(
+        `SELECT id_personne FROM personne
+        WHERE adresse_mail = $1`,
+        [mail]
     )
-    const id_personne = result.rows[0].id_personne
+    const id_personne = result2.rows[0].id_personne
     // Insertion de la personne cree a la table de responsable_fichier
     await client.query(
       `INSERT INTO responsable_fichier (id_responsable)
@@ -703,7 +845,7 @@ app.post('/api/responsable_fichier', async (req, res) => {
     res.status(201).json({ 
       message: "Créé avec succès", 
       id_personne, 
-      email 
+      mail 
     })
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -712,7 +854,7 @@ app.post('/api/responsable_fichier', async (req, res) => {
 ////////////Stockage du fichier televerse
 
 // Configure storage
-const storage = multer.diskStorage({
+const storage = multer.diskStorage({ ///
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, 'uploads')
     //Cree un dossier sil nexiste pas
