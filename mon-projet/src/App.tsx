@@ -8,7 +8,8 @@ import Connexion from './pages/connexion' //paramètres connexion
 import DepotFichier from './pages/depotFichier' //Formulaire de depot de fichier
 import SaisieManuelle from './pages/saisieManuelle'//Saisie Manuelle dinfomrations
 import AjoutLigne from './pages/ajoutligne' //Ajout manuelle de lignes pour une saisie manuelle
-import ResultatsRecherche from './pages/resultatsRecherche' //affichage résultats après form recherche 
+import ResultatsRecherche from './pages/resultatsRecherche' //affichage résultats après form recherche
+import DepotFichierMetadonnees from './pages/depotFichierMetadonnees';
 
 
 
@@ -25,6 +26,7 @@ function App() {
       <Route path="/saisieManuelle" element={<SaisieManuelle />} />
       <Route path="/ajoutligne" element={<AjoutLigne />} />
       <Route path="/resultatsRecherche" element={<ResultatsRecherche />} />
+      <Route path="/depotFichierMetadonnees" element={<DepotFichierMetadonnees />}/>
 
     </Routes>
   )

@@ -1079,6 +1079,101 @@ INTEGRATION
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */
 
+/*
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+INTEGRATION - Metadonnées
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*/
+
+app.post('/api/scriptInteMetadonnees', async (req, res) => {
+    let { chemin_source, extension, date_import,
+         commentaire, mail_responsable, type_script } = req.body
+    
+    console.log('Received integration request:', { chemin_source, extension, date_import,
+         commentaire, mail_responsable, type_script })
+
+    // Change file name (add today's date)
+    const file_name = path.basename(
+        chemin_source,
+        path.extname(chemin_source)
+      );
+    const ext = path.extname(chemin_source);
+    const newPath = path.dirname(chemin_source).replace(/\\/g, "/") + "/" +
+        `${file_name}__${date_import.replaceAll(":", "_")}${ext}`;
+    fs.rename(chemin_source, newPath, (err) => {
+        if (err) console.error(err);
+      });
+    console.log(`Fichier de données renommé avec succès !\nNouveau nom : ${file_name}__${date_import.replaceAll(":", "_")}${ext}`)
+
+    // Build the JSON structure expected by controleur.py
+    const jsonInput = {
+        script: "inte_metadonnees",
+        type_script : type_script,
+        fichier_donnees: [newPath],
+        extension : extension,
+        date_import: date_import,
+        commentaire: commentaire,
+
+        //mail_responsable : mail_responsable,
+        mail_responsable : "jean.darme@umontpellier.fr",
+        est_responsable_fichier : false,
+        nom : "Darme",
+        prenom : "Jean",
+        fonction : "...",
+        encadre_par : ""
+
+    }
+    console.log("JSON d'integration envoye au controleur:", jsonInput)
+    
+    // Create temp JSON file
+    const tempJsonPath = path.join(__dirname, 'temp_inte_' + Date.now() + '.json')
+    
+    try {
+        fs.writeFileSync(tempJsonPath, JSON.stringify(jsonInput, null, 2), 'utf-8')
+        
+        // CALL CONTROLEUR.PY (not the specific script directly)
+        const options = {
+            mode: 'text',
+            pythonPath: 'python3',
+            pythonOptions: ['-u'],
+            scriptPath: path.join('../Base_de_donnees'), // Point to mon-projet folder where controleur.py is
+            args: [tempJsonPath]
+        }
+        
+        PythonShell.run('controleur.py', options)
+            .then(messages => {
+                fs.unlinkSync(tempJsonPath)
+                const lastMessage = messages[messages.length - 1]
+                try {
+                    const result = JSON.parse(lastMessage)
+                    res.json(result)
+                } catch (parseError) {
+                    console.log(`Failed to parse output: ${lastMessage}`)
+                    res.status(500).json({
+                        reussite: false,
+                        commentaire: `Failed to parse output: ${lastMessage}`
+                    })
+                }
+            })
+            .catch(err => {
+                if (fs.existsSync(tempJsonPath)) fs.unlinkSync(tempJsonPath)
+                console.error('PythonShell error:', err)
+                res.status(500).json({
+                    reussite: false,
+                    commentaire: `Script error: ${err.message}`
+                })
+            })
+    } catch (err) {
+        if (fs.existsSync(tempJsonPath)) fs.unlinkSync(tempJsonPath)
+        console.log(`Server error: ${err.message}`)
+        res.status(500).json({
+            reussite: false,
+            commentaire: `Server error: ${err.message}`
+        })
+    }
+})
+
+
 //NE PAS TOUCHER - rajouter les autres routes AU-DESSUS !
 //pour rendre le site accessible à tous via le build
 app.use(express.static(path.join(__dirname, '../dist')));
