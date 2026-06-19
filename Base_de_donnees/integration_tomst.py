@@ -29,7 +29,7 @@ def convert_date(date_fichier):
     # Date 2023.09.01 00:00 adapté en 2023-09-01 00:00:00 pour le type TIMESTAMP de postgreSQL
     return "-".join(date_fichier.split(".")) + ":00"
 
-def insert_responsable(nom, prenom, adresse_mail, fonction, mail_encadrant):
+def recherche_responsable(adresse_mail):
     # Vérifie si le responsable est dans la BDD ou non (au cas où la personne se trompe)
     cur.execute("""
         SELECT id_personne FROM personne 
@@ -40,36 +40,10 @@ def insert_responsable(nom, prenom, adresse_mail, fonction, mail_encadrant):
 
     # Si le responsable n'existe pas
     if (id_responsable == None):
-        #print(f"Ajout d'un responsable pour {prenom} {nom}")
-        # Recherche de l'id de l'encadrant s'il y en a un (sinon "")
-        cur.execute("""
-            SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);
-            """, (mail_encadrant,))
-        id_encadrant = cur.fetchone()
-        id_encadrant = id_encadrant[0]
-        # Ajout de la personne correspondant au responsable
-        ####### Prendre en compte si la personne existe déjà mais n'est pas respo
-        cur.execute("""
-            INSERT INTO personne 
-                (nom, prenom, adresse_mail, fonction, id_hierarchie)
-                VALUES
-                (%s, %s, %s, %s, %s)
-            RETURNING id_personne
-            """,\
-            (nom, prenom, adresse_mail, fonction, id_encadrant))
-        # Recherche le l'id de cet nouvelle ligne
-        id_responsable = cur.fetchone()
-        # Ajout du responsable
-        cur.execute("""
-            INSERT INTO responsable_fichier 
-                (id_responsable)
-                VALUES
-                (%s)
-            """,\
-            (id_responsable[0],))
-    else:
-        #print("Le responsable existe déjà !")
-        pass
+        dico["commentaire"] = "Le responsable de fichier n'existe pas dans la base de données."
+        dico["reussite"] = False
+        print(json.dumps(dico))
+        exit(1)
 
     # Renvoie l'id du responsable à la fin
     return id_responsable[0]
@@ -279,25 +253,12 @@ if __name__ == "__main__":
     with open(fichier_mesure, newline="", encoding="utf-8") as f:
 
         reader = csv.reader(f, delimiter=";")
-        ## Pas d'entête avec les TOMST
-        #entetes = next(reader) #si on veut les entêtes avec csv et pas pandas
-        #next(reader)  # sauter les entêtes
 
         # Créer le responsable fichier s'il n'existe pas
-        id_responsable = insert_responsable(dico_json["nom"], dico_json["prenom"], dico_json["mail_responsable"],\
-            dico_json["fonction"], dico_json["encadre_par"])
-
-        # Copie le fichier et change son nom
-        #nouv_fichier_mesure = copie_fichier(fichier_mesure, dico_json["nom_outil"], dico_json["date_import"])
-        ##Fait par l'application
+        id_responsable = recherche_responsable(dico_json["mail_responsable"])
 
         # Insère la source de données (ici fichier pour TMS4, Dendromètre et Thermolloger)
         # Reprend l'extension du JSON au cas où le fichier n'en ait pas
-        """nom_nouv_fichier = Path(nouv_fichier_mesure).stem
-        insert_source_donnees(dico_json["extension"], nom_nouv_fichier, nouv_fichier_mesure,\
-                dico_json["date_import"], dico_json["date_collecte"], dico_json["commentaire"],\
-                id_responsable, dico_json["nom_outil"])
-        """
         nom_fichier = Path(fichier_mesure).stem
         id_source_donnees = insert_source_donnees(dico_json["extension"], nom_fichier, fichier_mesure,\
                 dico_json["date_import"], dico_json["date_collecte"], dico_json["commentaire"],\
@@ -366,24 +327,6 @@ if __name__ == "__main__":
 
 
 
-
-
-# Prendre en compte le cas où on ajoute des données avec une série temporelle qui existe déjà
 # Vérifier si la localisation n'a pas changé et sinon créer une nouvelle série temporelle
 # Dire qu'on ne peut pas traiter s'il n'y a pas structure fichier -> le format n'est pas conforme
 #   -> pouvoir télécharger le format (pour plus tard, STAGE)
-
-
-"""
--- Prendre 1er ligne fichier puis dernière ?
-INSERT INTO serie_temporelle (date_debut, date_fin, max_mesure, min_mesure, nb_mesures) VALUES
-    (2023-09-01 00:00:00, 2023-09-24 23:45:00, Infinity, -Infinity, 0);
--- Date début, même que date_debut de capteur_localise et date_fin dernière val fichier
-
-INSERT INTO mesure (valeur_mesure, date_heure, description_mesure, statut, id_mesure_associee, id_st) VALUES
-    (0, 2023-09-01 00:00:00, 'colonne 1 de 1 ligne de TMS4', 'principale'),
-    (25.625, 2023-09-01 00:00:00, 'colonne 4 de 1 ligne de TMS4', 'principale'),
-    (25.75, 2023-09-01 00:00:00, 'colonne 5 de 1 ligne de TMS4', 'principale'),
-    (25.6875, 2023-09-01 00:00:00, 'colonne 6 de 1 ligne de TMS4', 'principale'),
-    (403, 2023-09-01 00:00:00, 'colonne 7 de 1 ligne de TMS4', 'principale');
-"""

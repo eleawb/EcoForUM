@@ -339,64 +339,24 @@ def integration_hobo(ficjson):
                     cur.execute("INSERT INTO correction_mesure (id_mesure, id_coeff) SELECT %s, (SELECT id_coeff_correcteur FROM coefficient_correcteur WHERE id_capteur = %s) ON CONFLICT (id_mesure, id_coeff) DO NOTHING;", (id_mesure_bdd, id_capt_loc))
                     #print("liaison coefficient-mesure réussie !")
 
-            #étape 3 : vérifier si responsable fichier existe sinon le créer
-            #si la personne qui veut déposer son fichier n'est pas responsable fichier
-            if data["est_responsable_fichier"] == False:
-                #on cherche si l'encadrant référencé dans le json existe dans la base
-                cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["encadre_par"],))
-                id_encadrant = cur.fetchone()
-                #print(id_encadrant)
-                if id_encadrant != ():
-                    id_encadrant = id_encadrant[0]
+            #étape 3 : chercher le responsable fichier et vérifier qu'il existe
+            #on récupère l'id du responsable s'il existait
+            cur.execute("SELECT id_responsable FROM responsable_fichier rf JOIN personne p ON rf.id_responsable = p.id_personne WHERE lower(p.adresse_mail) = lower(%s);", (data["mail_responsable"],))
+            id_responsable_fic = cur.fetchone()
 
-
-                #si l'enccadrant n'existe pas dans la base et que dans le json, il y a un encadrant référencé
-                elif id_encadrant == () and data["encadre_par"] != "":
-                    #on ajoute l'encadrant à la base et on récupère son id
-                    cur.execute("INSERT INTO personne (adresse_mail) VALUES (%s);", (data["encadre_par"],))
-                    cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["encadre_par"],))
-                    id_encadrant = cur.fetchone()[0]
-    
-                # ici, l'encadrant existe, soit parce qu'il existait déjà, soit parce qu'on vient de le créer
-                # on doit donc insérer la personne qui veut être responsable fichier si elle n'existe pas en tant que personne dans la base
-                #test si la personne qui veut être responsable existe
-                cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["mail_responsable"],))
-                id_responsable_fic = cur.fetchone()
-                #print("id respo censé exister", id_responsable_fic)
-                #si la personne qui veut déposer n'existe pas dans la base en tant que personne, on l'insère
-                if id_responsable_fic is None:
-                    #print("on passe ici")
-                    cur.execute("INSERT INTO personne (adresse_mail, nom, prenom, fonction, id_hierarchie) VALUES (%s, %s, %s, %s, %s);", (data["mail_responsable"], data["nom"], data["prenom"], data["fonction"], id_encadrant))
-                    cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["mail_responsable"],))
-                    id_responsable_fic = cur.fetchone()[0]
-                    #print("id respo après insertion", id_responsable_fic)
-
-                #on crée le responsable
-                cur.execute("INSERT INTO responsable_fichier (id_responsable) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM responsable_fichier WHERE id_responsable = %s);", (id_responsable_fic, id_responsable_fic))
-                #print("création responsable car inexistant réussie")
-
-            else :#on récupère l'id du responsable s'il existait
-                cur.execute("SELECT id_responsable FROM responsable_fichier rf JOIN personne p ON rf.id_responsable = p.id_personne WHERE lower(p.adresse_mail) = lower(%s);", (data["mail_responsable"],))
-                id_responsable_fic = cur.fetchone()[0]
-
-            """
-            #étape 4 : copier le fichier dans un répertoire qui symbolisera le NAS et donner un nom unique au fichier : exemple, nom_fic_date_aujd
-            chemin_NAS = os.path.join(os.getcwd(), "NAS/"+data['nom_outil'].lower())
-            #le créer s'il existe pas
-            os.makedirs(chemin_NAS, exist_ok=True)
-            chemin_NAS = os.path.join(os.getcwd(), "NAS", data['nom_outil'].lower())
-            print(chemin_NAS)
-            nom_fic = Path(data["chemin_source"]).stem
-            nouveau_nom_fic = Path(data["chemin_source"]).stem + data["date_import"].replace(":", "_") + Path(data["chemin_source"]).suffix
-            shutil.copy2(data["chemin_source"], os.path.join(chemin_NAS, nouveau_nom_fic))
-
-            print("copie réussie")
-            """
-            nom_fic = Path(data["chemin_source"]).stem
-            #nouveau_nom_fic = Path(data["chemin_source"]).with_suffix("").as_posix() + "__" + data["date_import"].replace(":", "_") + Path(data["chemin_source"]).suffix
+            # Si le responsable n'existe pas
+            if (id_responsable_fic == None):
+                dico["commentaire"] = "Le responsable de fichier n'existe pas dans la base de données."
+                print(json.dumps(dico))
+                os.remove(fichiercsv)
+                exit(1)
+            
+            id_responsable_fic = id_responsable_fic[0]
             
 
             #étape 5 : créer source de données + la lier au responsable fichier + la lier à la structure correspondante au numéro d'instrument
+            nom_fic = Path(data["chemin_source"]).stem
+
             cur.execute("""INSERT INTO source_donnees (extension, nom_source, chemin_source, date_import, date_collecte, commentaire, id_responsable, id_struct, type_source)
             SELECT %s, %s, %s, to_timestamp(%s, %s), to_timestamp(%s, %s), %s, %s, (SELECT s.id_structure FROM structure_fichier s JOIN instrument_mesure im ON lower(im.nom_outil) = lower(s.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)), %s
             WHERE NOT EXISTS (SELECT 1 FROM source_donnees WHERE lower(extension) = lower(%s) AND lower(nom_source) = lower(%s) AND lower(chemin_source) = lower(%s) AND date_import = to_timestamp(%s, %s) AND date_collecte = to_timestamp(%s, %s) AND lower(commentaire) = lower(%s) AND id_responsable = %s AND id_struct = (SELECT sf.id_structure FROM structure_fichier sf JOIN instrument_mesure im ON lower(im.nom_outil) = lower(sf.nom_instrument) WHERE lower(im.num_instrument) = lower(%s)) AND lower(type_source) = lower(%s));

@@ -332,14 +332,7 @@ __Structure type d'un JSON d'intégration de métadonnées :__
 * "fichier_donnees" : ["nom_de_fichier_contenant_les_metadonnees", ...],
 "date_import" : "YYYY-MM-DD HH:MM:SS",
 "commentaire" : "...",
-
-* "mail_responsable" : "nom@example.com",
-* "est_responsable_fichier" : false,
-# A ajouter si la personne n'est pas déjà un responsable
-"nom" : "nom",
-"prenom" : "prenom",
-"fonction" : "...",
-"encadre_par" : "nom2@example.com"
+* "mail_responsable" : "nom@example.com"
 ```
 
 __Structure type d'un JSON d'intégration de fichier de mesure :__ 
@@ -353,12 +346,5 @@ __Structure type d'un JSON d'intégration de fichier de mesure :__
 "date_collecte" : "YYYY-MM-DD HH:MM:SS",
 "date_import" : "YYYY-MM-DD HH:MM:SS",
 "commentaire" : "...",
-
-* "mail_responsable" : "nom@example.com",
-* "est_responsable_fichier" : false,
-# A ajouter si la personne n'est pas déjà un responsable
-"nom" : "nom",
-"prenom" : "prenom",
-"fonction" : "...",
-"encadre_par" : "nom2@example.com"
+* "mail_responsable" : "nom@example.com"
 ```

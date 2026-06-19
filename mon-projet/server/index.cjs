@@ -1016,12 +1016,7 @@ app.post('/api/scriptInte', async (req, res) => {
         date_import: date_import,
         commentaire: commentaire,
 
-        mail_responsable : mail_responsable,
-        est_responsable_fichier : true,
-        nom : "nom",
-        prenom : "prenom",
-        fonction : "...",
-        encadre_par : "nom2@example.com"
+        mail_responsable : mail_responsable
 
     }
     console.log("JSON d'integration envoye au controleur:", jsonInput)
