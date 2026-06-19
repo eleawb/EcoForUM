@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { apiFetch } from '../api';
+import { SuccessDialog } from "./SuccessDialog";
 
 function DepotFichierMetadonnees(){
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   const [cheminSelectedFile , setCheminSelectedFile] = useState<string>('');
 
   const [formulaireEnvoye, setFormulaireEnvoye] = useState<boolean>(false);
+
+  const [successOpen, setSuccessOpen] = useState(false);
 
   const { state } = useLocation();
   let type_script = state.selected;
@@ -319,6 +322,9 @@ const sendFormInfo = async (filePath: string, mail_responsable: string,
       if (response.ok) {
         const data = await response.json();
         console.log('Script integration metadonnees result:', data);
+        if (data.reussite){
+          setSuccessOpen(true);
+        }
         return data;
       } else {
         console.error('Failed to run integration metadonnees script'); 
@@ -633,6 +639,15 @@ return(
                 >
                   Déposer
                 </Button>
+
+                <SuccessDialog
+                  open={successOpen}
+                  titre={"Intégration Réussie !"}
+                  nomBoutonRestart={"Nouvelle Intégration"}
+                  message={"Toutes les mesures ont pu être intégrées avec succés."}
+                  onStay={() => navigate("/ajout")}
+                  onGoHome={() => navigate("/")}
+                />
   
               </Stack>
             </form>

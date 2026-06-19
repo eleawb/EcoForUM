@@ -432,7 +432,7 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
 
     if id_responsable_fic == None : 
         dico["commentaire"] = "Le responsable fichier sélectionné n'existe pas dans la base, impossible d'intégrer"
-        print(json.dump(dico))
+        print(json.dumps(dico))
         cur.close()
         conn.close()
         exit(1)

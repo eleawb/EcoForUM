@@ -1109,13 +1109,7 @@ app.post('/api/scriptInteMetadonnees', async (req, res) => {
         date_import: date_import,
         commentaire: commentaire,
 
-        //mail_responsable : mail_responsable,
-        mail_responsable : "jean.darme@umontpellier.fr",
-        est_responsable_fichier : false,
-        nom : "Darme",
-        prenom : "Jean",
-        fonction : "...",
-        encadre_par : ""
+        mail_responsable : mail_responsable
 
     }
     console.log("JSON d'integration envoye au controleur:", jsonInput)
