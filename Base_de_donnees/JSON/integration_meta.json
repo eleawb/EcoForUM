@@ -1,17 +1,12 @@
 
 {
    "script": "inte_metadonnees",
-   "type_script": [ "projet" ],
+   "type_script": [ "personne" ],
    "fichier_donnees": [
-     "../Base_de_donnees/Fichiers_metadonnees/Metadonnees_projets.xlsx"
+     "../Base_de_donnees/Fichiers_metadonnees/Metadonnees_personnes.xlsx"
    ],
    "extension": "",
    "date_import": "2026-06-16 17:17:59",
    "commentaire": "",
-   "mail_responsable" : "anna.tomie@umontpellier.fr",
-    "est_responsable_fichier" : false,
-    "nom" : "Tomie",
-    "prenom" : "Anna",
-    "fonction" : "Enseignant",
-    "encadre_par" : "sam.ouraille@umontpellier.fr"
+   "mail_responsable" : "anna.tomie@umontpellier.fr"
 }

@@ -19,7 +19,8 @@ import {
   FormLabel,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Autocomplete
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { apiFetch } from '../api';
@@ -32,28 +33,28 @@ Definition des etats
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */ 
 
-  const [selectedNumInstrument, setSelectedNumInstrument] = useState<string>(''); //num_instrument
-  const [selectedNomInstrument, setSelectedNomInstrument] = useState<string>(''); // nom_outil
-  const [numInstrumentDisabled, setNumInstrumentDisabled] = useState(true);
-  const [instruments, setInstrumentsDisponibles] = useState<any[]>([]); //liste dinstruments disponibles sur la BDD
-  const [nomsInstruments, setNomsInstruments] = useState<any[]>([]);
-  const [numsInstrumentsParNoms, setNumsInstrumentsParNoms] = useState<Record<string, string[]>>({});
   const [showAdditionalInputs, setShowAdditionalInputs] = useState<boolean>(false);
   const [selectedResponsable,setSelectedResponsable] = useState<string>('');
+  const [responsableCree, setResponsableCree] = useState<boolean>(false);
   const [responsables, setResponsablesDisponibles] = useState<any[]>([]);
-  const [isNewResponsable, setIsNewResponsable] = useState<boolean>(false);//Check si le responsable fichier fut cree pour cet ajout
   const [showCreationRespInputs, setShowCreationRespInputs] = useState<boolean>(false);
   const [nom, setNom] = useState<string>('');
   const [prenom, setPrenom] = useState<string>('');
   const [mail, setMail] = useState<string>('');
+  const [finVerifMail, setFinVerifMail] = useState<boolean>(false);
   const [extension, setExtension] = useState<string>('');
-  //const [dateCollecteForm, setDateCollecteForm] = useState<string>('');
-  const [dateCollecteComplete, setDateCollecteComplete] = useState<string>('');
+  const [estDejaPersonne, setEstDejaPersonne] = useState<boolean>(true);
+  const [personnes, setPersonnes] = useState<any[]>([]);
+  const [personnesPasResponsables, setPersonnesPasResponsables] = useState<any[]>([]); 
+  const [fonction, setFonction] = useState<string>('');
+  const [selectedEncadrant,setSelectedEncadrant] = useState<string>('');
+  const [inputValueEncadrant, setInputValueEncadrant] = useState("");
   const [commentaire, setCommentaire] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [cheminSelectedFile , setCheminSelectedFile] = useState<string>('');
 
-  const FirstFormComplete = selectedNomInstrument !== '' && selectedNumInstrument !== '';
+  const [formulaireEnvoye, setFormulaireEnvoye] = useState<boolean>(false);
+
   const { state } = useLocation();
   let type_script = state.selected;
 /*
@@ -72,10 +73,20 @@ const fetchData = async () => {
                 //console.log("Instruments reçus du backend:", instrumentsData) 
                 //setInstrumentsDisponibles(instrumentsData || [])
 
-                const respononsablesRes = await apiFetch('/api/responsables')
-                const respononsablesData = await respononsablesRes.json()
-                console.log("Responsables reçus du backend:", respononsablesData)
-                setResponsablesDisponibles(respononsablesData || [])
+                const responsablesRes = await apiFetch('/api/responsables')
+                const responsablesData = await responsablesRes.json()
+                console.log("Responsables reçus du backend:", responsablesData)
+                setResponsablesDisponibles(responsablesData || [])
+
+                const personnesPasRespoRes = await apiFetch('/api/personnesPasRespo');
+                const personnesPasRespoData = await personnesPasRespoRes.json()
+                console.log("Personnes non responsables de fichier reçus du backend:", personnesPasRespoData)
+                setPersonnesPasResponsables(personnesPasRespoData || [])
+
+                const personnesRes = await apiFetch('/api/personnes');
+                const personnesData = await personnesRes.json()
+                console.log("Personnes reçus du backend:", personnesData)
+                setPersonnes(personnesData || [])
 
             } catch (error) {
                 console.error('Erreur lors du chargement des données:', error)
@@ -97,8 +108,17 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   const ResponsableChange = (event: SelectChangeEvent<string>) => {
     const selectedValue = event.target.value;
     setSelectedResponsable(selectedValue);
-    setIsNewResponsable(false);//Remet le flag a false quand on prend un responsable autre que celui nouvellement cree
   };
+  
+  const retourCreationResponsable = () => {
+    setShowCreationRespInputs(false)
+    setNom('')
+    setPrenom('')
+    setMail('')
+    setFonction('')
+    setInputValueEncadrant('')
+    setSelectedEncadrant('')
+  }
 
 const TodayDate = () => {
   const today = new Date();
@@ -111,14 +131,89 @@ const TodayDate = () => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${secondes}`;
 };
 
-const AutofillDate = () => {
-  setDateCollecteComplete(TodayDate());
+const clearChamps = () => {
+  setNom('')
+  setPrenom('')
+  setFonction('')
+  setInputValueEncadrant('')
+  setSelectedEncadrant('')
 };
+
+const isValidEmail = (email: string) => {
+  return /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+$/.test(email);
+}
+
+const verifMailPersonne = async () => {
+  //Verifie si les entrees sont remplies
+  if (!mail) {
+    alert("Veuillez remplir le champs requis (mail)");
+    return;
+  }
+  
+  // Vérifier que c'est un mail valide !! 
+  if (!isValidEmail(mail)) {
+    alert("Adresse mail invalide");
+    return;
+  }
+
+
+  try {
+    const response = await apiFetch('/api/verifMailPersonne', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+    mail: mail
+    }),
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    
+    if (data.estPresent){
+      console.log("Mail appartient déjà à une personne.");
+      setEstDejaPersonne(true)
+      clearChamps()
+
+      // Si la personne est déjà un responsable
+      if (data.estDejaResponsable){
+        alert("Le mail proposé appartient déjà à un responsable de fichiers.")
+      }
+      // Si la personne est dans la base mais pas en tant que responsable
+      else{
+        // Donner l'accès au bouton de création de responsable
+        setFinVerifMail(true)
+        setNom(data.nom_personne)
+        setPrenom(data.prenom_personne)
+        setFonction(data.fonction)
+
+        if (data.aEncadrant){
+          setInputValueEncadrant(data.prenom_encadrant + " " + data.nom_encadrant + " - " + data.mail_encadrant)
+          setSelectedEncadrant(data.mail_encadrant)
+        }
+      }
+    }
+    else{
+      setEstDejaPersonne(false)
+      setFinVerifMail(true)
+      clearChamps()
+    }
+
+    } else {
+      const error = await response.json();
+      alert(`Erreur: ${error.message}`);
+    }
+    } catch (error) {
+      console.error('Error:', error);
+      alert("Erreur lors de la vérification du mail d'une potentielle personne");
+    }
+}
 
 const handleCreateResponsable = async () => {
   //Verifie si les entrees sont remplies
   if (!nom || !prenom || !mail) {
-    alert("Veuillez remplir tous les champs (nom, prénom, email)");
+    alert("Veuillez remplir tous les champs requis (nom, prénom, mail)");
     return;
   }
 
@@ -131,8 +226,10 @@ const handleCreateResponsable = async () => {
     body: JSON.stringify({
     nom: nom,
     prenom: prenom,
-    email: mail,
-    fonction: "responsable_fichier" // toujours un responsable_fichier
+    mail: mail,
+    fonction: fonction,
+    encadrant: selectedEncadrant,
+    estDejaPersonne: estDejaPersonne
     }),
   });
 
@@ -143,19 +240,21 @@ const handleCreateResponsable = async () => {
     // recharger la liste des responsables fichiers disponibles dans la BDD
     fetchData();
                   
-    // Remettre le form de creation en blanc
-    setNom('');
-    setPrenom('');
-    setMail('');
+    // Cacher le form de création
     setShowCreationRespInputs(false);
 
     //Selection automatique du responsable cree
-    setSelectedResponsable(data.email);
-    setIsNewResponsable(true);//sets la valeur de NewResponsable a true
+    setSelectedResponsable(data.mail);
+    setResponsableCree(true)
 
     } else {
       const error = await response.json();
-      alert(`Erreur: ${error.message}`);
+      if (error.message.includes("uq_personne_mail")){
+        alert("L'adresse mail choisie est déjà utilisée pour un responsable de fichier.");
+      }
+      else{
+        alert(`Erreur: ${error.message}`);
+      }
     }
     } catch (error) {
       console.error('Error:', error);
@@ -199,6 +298,8 @@ const handleCreateResponsable = async () => {
 //////////////////////////////////Script d'integration//////////////////////////////////////////////////
 const sendFormInfo = async (filePath: string, mail_responsable: string, 
   commentaire: string, extension :string, type_script : string) => {
+
+    setFormulaireEnvoye(true);
 
     try {
       const response = await apiFetch('/api/scriptInteMetadonnees', { //Les routes mènent au serveur index.cjs
@@ -257,6 +358,7 @@ const DepotFic = () => {
         console.log('Upload success:', result);
         setSelectedFile(file);
         setCheminSelectedFile(result.file.path);
+        setShowAdditionalInputs(true);
       }
       else {
           alert('Erreur sauvegarde');
@@ -317,109 +419,180 @@ return(
                 )}
 
                 {showAdditionalInputs && (
+                <>
+
+                  <FormControl fullWidth required>
+                      <InputLabel>Sélectionnez le Responsable du fichier</InputLabel>
+                      <Select
+                          value={selectedResponsable}
+                          id="responsableID" 
+                          onChange={ResponsableChange}
+                          disabled={showCreationRespInputs}
+                          required
+                          label="Sélectionnez le Responsable du fichier"
+                      >
+                          {responsables.slice() // évite de modifier le tableau d'origine
+                              .sort((a, b) => {
+                                const nom = a.nom.localeCompare(b.nom);
+                        
+                                return nom !== 0
+                                    ? nom
+                                    : a.prenom.localeCompare(b.prenom);
+                              }).map((responsable) => (
+                              <MenuItem 
+                                  key={responsable.id_personne} 
+                                  value={responsable.adresse_mail}
+                              >
+                                  {responsable.prenom} {responsable.nom} - {responsable.adresse_mail}
+                              </MenuItem>
+                          ))}
+                      </Select>
+                  </FormControl>
+                  
+                  {responsableCree && (
+                    <Typography variant="body2" sx={{ color: 'green', textAlign: 'center' }}>
+                    Le responsable de fichier de mail {mail} a bien été créé.
+                    </Typography>
+                  )}
+
+                  <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={(e) => {
+                    setShowCreationRespInputs(true)
+                    setEstDejaPersonne(true)
+                    setFinVerifMail(false)
+                    setResponsableCree(false)
+                    clearChamps()
+                    setMail('');
+                  }}
+                  sx={{ minWidth: '100px', height: '56px' }}
+                  >
+                  Créer nouveau responsable fichier  
+                  </Button>
+                  
+                  {showCreationRespInputs &&(
                   <>
 
-                    <FormControl fullWidth required>
-                        <InputLabel>Sélectionnez le Responsable du fichier</InputLabel>
-                        <Select
-                            value={selectedResponsable}
-                            id="responsableID" 
-                            onChange={ResponsableChange}
-                            label="Sélectionnez le Responsable du fichier"
-                        >
-                            {responsables.slice() // évite de modifier le tableau d'origine
-                                .sort((a, b) => {
-                                  const nom = a.nom.localeCompare(b.nom);
-                          
-                                  return nom !== 0
-                                      ? nom
-                                      : a.prenom.localeCompare(b.prenom);
-                                }).map((responsable) => (
-                                <MenuItem 
-                                    key={responsable.id_personne} 
-                                    value={responsable.adresse_mail}
-                                >
-                                    {responsable.prenom} {responsable.nom} - {responsable.adresse_mail}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <Button
-                    type="button"
-                    variant="outlined"
-                    onClick={(e) => setShowCreationRespInputs(true)}
-                    sx={{ minWidth: '100px', height: '56px' }}
-                    >
-                    Créer nouveau responsable fichier  
-                    </Button>
-                    
-                   {showCreationRespInputs &&(
-                    <>
-                   <TextField
-                      label="nom"
-                      variant="outlined"
+                  <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+                    <Autocomplete
                       fullWidth
-                      required
-                      value={nom}
-                      onChange={(e) => setNom(e.target.value)}
-                      placeholder="Entrez votre nom"
+                      options={personnesPasResponsables
+                        .slice()
+                        .sort((a, b) => a.adresse_mail.localeCompare(b.adresse_mail))
+                        .map((p) => p.adresse_mail)}
+                      value={mail}
+                      onInputChange={(_, newValue) => {
+                        setMail(newValue)
+                        clearChamps()
+                        setFinVerifMail(false)
+                        setEstDejaPersonne(true)
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Adresse mail"
+                          variant="outlined"
+                          fullWidth
+                          required
+                          placeholder="Entrez votre mail"
+                        />
+                      )}
                     />
-                    <TextField
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      onClick={verifMailPersonne}
+                      sx={{ minWidth: '100px', height: '56px' }}
+                      >
+                      Vérifier
+                    </Button>
+                  </Stack>
+
+                  <TextField
                       label="Prénom"
                       variant="outlined"
                       fullWidth
                       required
+                      disabled={estDejaPersonne}
                       value={prenom}
                       onChange={(e) => setPrenom(e.target.value)}
                       placeholder="Entrez votre prénom"
                     />
-                    <TextField
-                      label="Mail"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={mail}
-                      onChange={(e) => setMail(e.target.value)}
-                      placeholder="Entrez votre eMail"
+                  <TextField
+                      label="Nom"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    disabled={estDejaPersonne}
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    placeholder="Entrez votre nom"
                     />
+                  <TextField
+                    label="Fonction"
+                    variant="outlined"
+                    fullWidth
+                    disabled={estDejaPersonne}
+                    value={fonction}
+                    onChange={(e) => setFonction(e.target.value)}
+                    placeholder="Entrez votre fonction"
+                  />
+                  <Autocomplete
+                    disabled={estDejaPersonne}
+                    options={personnes}
+                    getOptionLabel={(option) =>
+                      typeof option === "string"
+                        ? option
+                        : `${option.prenom} ${option.nom} - ${option.adresse_mail}`
+                    }
+                    inputValue={inputValueEncadrant}
+                    onInputChange={(_, newValue) => {
+                      setInputValueEncadrant(newValue);
+                      //setSelectedEncadrant(newValue.split(" - ")[1] ?? "");
+                      //console.log("Encadrant :", selectedEncadrant)
+                    }}
+                    onChange={(_, value) => {
+                      if (value && typeof value !== "string") {
+                        setSelectedEncadrant(value.adresse_mail);
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Encadrant"
+                        variant="outlined"
+                        fullWidth
+                        placeholder="Sélectionnez votre encadrant"
+                      />
+                    )}
+                  />
+                  
+
+                  <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
                     <Button
                         type="button"
                         variant="outlined"
+                        disabled={!finVerifMail}
                         onClick={handleCreateResponsable}
                         sx={{ minWidth: '100px', height: '56px' }}
                       >
                         Créer
                       </Button>
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      onClick={retourCreationResponsable}
+                      sx={{ minWidth: '100px', height: '56px' }}
+                      >
+                      Retour
+                    </Button>
+                  </Stack>
 
-                    </>
-                    )}
-                    
+                  </>
+                  )}
+
                   <Stack direction="row" spacing={2} alignItems="center">
-                      <TextField
-                        label="Date de collecte"
-                        type="datetime-local"
-                        variant="outlined"
-                        id='date_collecte'
-                        fullWidth
-                        required
-                        value={dateCollecteComplete}
-                        onChange={(e) => setDateCollecteComplete(e.target.value.replace("T", " "))}
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{
-                          step: 1, // autorise les secondes
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        onClick={AutofillDate}
-                        sx={{ minWidth: '100px', height: '56px' }}
-                        >
-                        Aujourd'hui
-                      </Button>
-                    </Stack>
-
-                    <Stack direction="row" spacing={2} alignItems="center">
                       <TextField
                         label="Format (extension)"
                         variant="outlined"
@@ -443,14 +616,14 @@ return(
                         placeholder="Commentaire sur le fichier"
                       />
                     </Stack>
-                  
-                  </>
-                )}
+                </>
+              )}
               
                 <Button
                   type="submit"
                   variant="contained"
                   disabled={!selectedFile}
+                  loading={formulaireEnvoye}
                   sx={{
                     bgcolor: (selectedFile) ? '#EC9706' : '#CCCCCC',
                     '&:hover': {

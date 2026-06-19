@@ -426,44 +426,16 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
                             cur.execute("INSERT INTO membre_projet (id_projet, id_recolteur, id_capteur_generique) SELECT (SELECT id_projet FROM projet WHERE lower(mail_responsable) IS NOT DISTINCT FROM lower(%s) AND date_debut IS NOT DISTINCT FROM to_date(%s, %s) AND date_fin IS NOT DISTINCT FROM to_date(%s, %s) AND lower(nom_responsable) IS NOT DISTINCT FROM lower(%s) LIMIT 1), (SELECT id_personne FROM personne WHERE lower(adresse_mail) IS NOT DISTINCT FROM lower(%s)), (SELECT id_capteur_generique FROM capteur_generique WHERE lower(description) IS NOT DISTINCT FROM lower(%s)) ON CONFLICT(id_projet, id_recolteur, id_capteur_generique) DO NOTHING;", (row1[2], date_deb, format_date(row1[3]), date_fin, format_date(row1[4]), row1[1], row[0], row2[1]))
                             #print("insertion (maudite-bis) de membre projet")
     """
-    #insertion du responsable fichier (et création si non existant)
-    if data["est_responsable_fichier"] == False:
-        #on cherche si l'encadrant référencé dans le json existe dans la base
-        cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["encadre_par"],))
-        id_encadrant = cur.fetchone()
-        #print(id_encadrant)
-        if id_encadrant != None:
-            id_encadrant = id_encadrant[0]
+    cur.execute("SELECT id_responsable FROM responsable_fichier rf JOIN personne p ON rf.id_responsable = p.id_personne WHERE lower(p.adresse_mail) = lower(%s);", (data["mail_responsable"],))
+    res = cur.fetchone()
+    id_responsable_fic = res[0] if res else None
 
-
-        #si l'enccadrant n'existe pas dans la base et que dans le json, il y a un encadrant référencé
-        elif id_encadrant == () and data["encadre_par"] != "":
-            #on ajoute l'encadrant à la base et on récupère son id
-            cur.execute("INSERT INTO personne (adresse_mail) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM personne WHERE lower(adresse_mail) = lower(%s));", (data["encadre_par"], data["encadre_par"]))
-            cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["encadre_par"],))
-            id_encadrant = cur.fetchone()[0]
-    
-        # ici, l'encadrant existe, soit parce qu'il existait déjà, soit parce qu'on vient de le créer
-        # on doit donc insérer la personne qui veut être responsable fichier si elle n'existe pas en tant que personne dans la base
-        #test si la personne qui veut être responsable existe
-        cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["mail_responsable"],))
-        id_responsable_fic = cur.fetchone()
-        #print("id respo censé exister", id_responsable_fic)
-        #si la personne qui veut déposer n'existe pas dans la base en tant que personne, on l'insère
-        if id_responsable_fic is None:
-            #print("on passe ici")
-            cur.execute("INSERT INTO personne (adresse_mail, nom, prenom, fonction, id_hierarchie) VALUES (%s, %s, %s, %s, %s);", (data["mail_responsable"], data["nom"], data["prenom"], data["fonction"], id_encadrant))
-            cur.execute("SELECT id_personne FROM personne WHERE lower(adresse_mail) = lower(%s);", (data["mail_responsable"],))
-            id_responsable_fic = cur.fetchone()[0]
-            #print("id respo après insertion", id_responsable_fic)
-
-        #on crée le responsable
-        cur.execute("INSERT INTO responsable_fichier (id_responsable) SELECT %s WHERE NOT EXISTS (SELECT 1 FROM responsable_fichier WHERE id_responsable = %s);", (id_responsable_fic, id_responsable_fic))
-        #print("création responsable car inexistant réussie")
-
-    else :#on récupère l'id du responsable s'il existait
-        cur.execute("SELECT id_responsable FROM responsable_fichier rf JOIN personne p ON rf.id_responsable = p.id_personne WHERE lower(p.adresse_mail) = lower(%s);", (data["mail_responsable"],))
-        id_responsable_fic = cur.fetchone()[0]
+    if id_responsable_fic == None : 
+        dico["commentaire"] = "Le responsable fichier sélectionné n'existe pas dans la base, impossible d'intégrer"
+        print(json.dump(dico))
+        cur.close()
+        conn.close()
+        exit(1)
 
     #insertion d'une source_données pour répertorier les informations sur les fichiers
     fics = [ficPers, ficInstr, ficProj]
@@ -471,7 +443,7 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
         if fics[i] != None :
             ext = str(Path(fics[i]).suffix).split(".")[1]
             nom_fic = Path(fics[i]).stem
-            chemin_fic = str(Path(fics[i]))
+            chemin_fic = str(fics[i])
             if i == 0 :
                 type_fic = "personne"
             elif i == 1 :
@@ -479,7 +451,7 @@ def integration_fichier_metadonnees(ficPers, ficInstr, ficProj, ficJSON):
             else:
                 type_fic = "projet"
 
-            cur.execute("INSERT INTO source_donnees (extension, nom_source, chemin_source, date_import, commentaire, id_responsable, type_source) VALUES (%s, %s, %s, to_timestamp(%s, %s), %s, %s, %s);", (ext, nom_fic, chemin_fic, data["date_import"], format_timestamp(data["date_import"]), data["commentaire"], id_responsable_fic, "fichier_métadonnées_"+type_fic))
+            cur.execute("INSERT INTO source_donnees (extension, nom_source, chemin_source, date_import, commentaire, id_responsable, type_source) SELECT %s, %s, %s, to_timestamp(%s, %s), %s, %s, %s WHERE %s IS NOT NULL;", (ext, nom_fic, chemin_fic, data["date_import"], format_timestamp(data["date_import"]), data["commentaire"], id_responsable_fic, "fichier_métadonnées_"+type_fic, id_responsable_fic))
 
 #if cur.rowcount == 0 : -> l'insertion ne s'est pas passée
     dico["commentaire"] = ""
