@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { apiFetch } from '../api';
+import { SuccessDialog } from "./SuccessDialog";
 
 function DepotFichier(){
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   const [estDejaPersonne, setEstDejaPersonne] = useState<boolean>(true);
   const [responsableCree, setResponsableCree] = useState<boolean>(false);
   const [formulaireEnvoye, setFormulaireEnvoye] = useState<boolean>(false);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   const [nom, setNom] = useState<string>('');
   const [prenom, setPrenom] = useState<string>('');
@@ -508,8 +510,9 @@ const sendFormInfo = async (nom_outil: string, num_instrument: string, filePath:
       if (response.ok) {
         const data = await response.json();
         console.log('Script integration result:', data);
-        return data;
         // REDIRECTION
+        setSuccessOpen(true);
+        return data;
       } else {
         console.error('Failed to run integration script');
         setFormulaireEnvoye(false); 
@@ -845,6 +848,13 @@ return(
                 >
                   Déposer
                 </Button>
+
+                <SuccessDialog
+                  open={successOpen}
+                  message={"Toutes les mesures ont pu être intégrées avec succés."}
+                  onStay={() => window.location.reload()}
+                  onGoHome={() => navigate("/")}
+                />
   
               </Stack>
             </form>
