@@ -511,7 +511,9 @@ const sendFormInfo = async (nom_outil: string, num_instrument: string, filePath:
         const data = await response.json();
         console.log('Script integration result:', data);
         // REDIRECTION
-        setSuccessOpen(true);
+        if (data.reussite){
+          setSuccessOpen(true);
+        }
         return data;
       } else {
         console.error('Failed to run integration script');
@@ -851,7 +853,9 @@ return(
 
                 <SuccessDialog
                   open={successOpen}
+                  titre={"Intégration réussie"}
                   message={"Toutes les mesures ont pu être intégrées avec succés."}
+                  nomBoutonRestart={"Nouvelle intégration"}
                   onStay={() => window.location.reload()}
                   onGoHome={() => navigate("/")}
                 />

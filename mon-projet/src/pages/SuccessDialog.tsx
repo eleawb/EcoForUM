@@ -10,14 +10,18 @@ import {
 
 interface SuccessDialogProps {
   open: boolean;
+  titre: string;
   message: string;
+  nomBoutonRestart: string;
   onGoHome: () => void;
   onStay: () => void;
 }
 
 export function SuccessDialog({
   open,
+  titre,
   message,
+  nomBoutonRestart,
   onGoHome,
   onStay,
 }: SuccessDialogProps) {
@@ -28,7 +32,7 @@ export function SuccessDialog({
           <CheckCircleIcon color="success" sx={{ fontSize: 80 }} />
 
           <Typography variant="h5">
-            Intégration réussie
+            {titre}
           </Typography>
 
           <Typography textAlign="center">
@@ -37,17 +41,26 @@ export function SuccessDialog({
         </Stack>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onStay}>
-          Rester ici
+      <DialogActions
+        sx={{
+            justifyContent: "center",
+            gap: 2,
+            pb: 3,
+        }}
+      >
+        <Button 
+        variant="contained"
+        color="success"
+        onClick={onStay}>
+        {nomBoutonRestart}
         </Button>
 
         <Button
-          variant="contained"
-          color="success"
-          onClick={onGoHome}
+        variant="contained"
+        color="success"
+        onClick={onGoHome}
         >
-          Retour à l'accueil
+        Retour à l'accueil
         </Button>
       </DialogActions>
     </Dialog>
